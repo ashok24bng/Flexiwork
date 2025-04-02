@@ -1151,6 +1151,16 @@ function hideLoading() {
     }
 }
 
+// Save current page state
+function savePageState(page) {
+    localStorage.setItem('currentPage', page);
+}
+
+// Load current page state
+function loadPageState() {
+    return localStorage.getItem('currentPage') || 'dashboard';
+}
+
 // Update UI based on login state
 function updateUI() {
     if (isLoggedIn) {
@@ -1168,8 +1178,13 @@ function updateUI() {
         // Update user display
         document.getElementById('usernameDisplay').textContent = currentUser.name;
         
-        // Show dashboard page
-        showDashboardPage();
+        // Show appropriate page based on saved state
+        const currentPage = loadPageState();
+        if (currentPage === 'startWork') {
+            showStartWorkPage();
+        } else {
+            showDashboardPage();
+        }
     } else {
         // Show landing page and main navigation
         landingPage.style.display = 'block';
@@ -1192,14 +1207,25 @@ function showLandingPage() {
 function showDashboardPage() {
     console.log('showDashboardPage called'); // Debug log
     
-    // Hide other pages
+    // Save current page state
+    savePageState('dashboard');
+    
+    // Get page elements
     const landingPage = document.getElementById('landingPage');
     const dashboardPage = document.getElementById('dashboardPage');
     const startWorkPage = document.getElementById('startWorkPage');
     
-    if (landingPage) landingPage.style.display = 'none';
+    // Hide other pages
+    if (landingPage) {
+        landingPage.style.display = 'none';
+        console.log('Landing page hidden'); // Debug log
+    }
+    
+    // Show dashboard page
     if (dashboardPage) {
         dashboardPage.style.display = 'block';
+        dashboardPage.style.position = 'relative';
+        dashboardPage.style.zIndex = '1';
         console.log('Dashboard page displayed'); // Debug log
         
         // Update dashboard data
@@ -1207,21 +1233,50 @@ function showDashboardPage() {
     } else {
         console.error('Dashboard page element not found'); // Debug log
     }
-    if (startWorkPage) startWorkPage.style.display = 'none';
+    
+    // Hide start work page
+    if (startWorkPage) {
+        startWorkPage.style.display = 'none';
+        startWorkPage.style.position = 'relative';
+        startWorkPage.style.zIndex = '0';
+        console.log('Start work page hidden'); // Debug log
+    }
 }
 
 function showStartWorkPage() {
     console.log('showStartWorkPage called'); // Debug log
     
-    // Hide other pages
+    // Save current page state
+    savePageState('startWork');
+    
+    // Get page elements
     const landingPage = document.getElementById('landingPage');
     const dashboardPage = document.getElementById('dashboardPage');
     const startWorkPage = document.getElementById('startWorkPage');
     
-    if (landingPage) landingPage.style.display = 'none';
-    if (dashboardPage) dashboardPage.style.display = 'none';
+    // Hide other pages
+    if (landingPage) {
+        landingPage.style.display = 'none';
+        console.log('Landing page hidden'); // Debug log
+    }
+    
+    if (dashboardPage) {
+        dashboardPage.style.display = 'none';
+        dashboardPage.style.position = 'relative';
+        dashboardPage.style.zIndex = '0';
+        console.log('Dashboard page hidden'); // Debug log
+    }
+    
+    // Show start work page
     if (startWorkPage) {
         startWorkPage.style.display = 'block';
+        startWorkPage.style.position = 'fixed';
+        startWorkPage.style.top = '0';
+        startWorkPage.style.left = '0';
+        startWorkPage.style.width = '100%';
+        startWorkPage.style.height = '100%';
+        startWorkPage.style.zIndex = '1000';
+        startWorkPage.style.overflow = 'auto';
         console.log('Start work page displayed'); // Debug log
         
         // Update work page data
@@ -1332,7 +1387,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize UI
     updateUI();
     
-    // Add event listeners for navigation
+    // Add event listener for back to dashboard button
+    const backToDashboard = document.getElementById('backToDashboard');
+    if (backToDashboard) {
+        console.log('Back to dashboard button found'); // Debug log
+        backToDashboard.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Back to dashboard button clicked'); // Debug log
+            showDashboardPage();
+            // Force update the UI to ensure proper navigation
+            updateUI();
+        });
+    } else {
+        console.error('Back to dashboard button not found'); // Debug log
+    }
+    
+    // Add event listener for dashboard navigation
     const dashboardNavLink = document.getElementById('dashboardNavLink');
     if (dashboardNavLink) {
         console.log('Dashboard nav link found'); // Debug log
@@ -1344,71 +1414,32 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('Dashboard nav link not found'); // Debug log
     }
-
-    // Add event listener for home link
-    const homeLink = document.getElementById('homeLink');
-    if (homeLink) {
-        homeLink.addEventListener('click', function(e) {
+    
+    // Add event listener for start work button
+    const startWorkBtn = document.getElementById('startWorkBtn');
+    if (startWorkBtn) {
+        console.log('Start work button found'); // Debug log
+        startWorkBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            showDashboardPage();
+            console.log('Start work button clicked'); // Debug log
+            showStartWorkPage();
         });
+    } else {
+        console.error('Start work button not found'); // Debug log
     }
-
-    // Add event listener for dashboard home link
-    const dashboardHomeLink = document.getElementById('dashboardHomeLink');
-    if (dashboardHomeLink) {
-        dashboardHomeLink.addEventListener('click', function(e) {
+    
+    // Add event listener for start work navigation link
+    const startWorkNavLink = document.getElementById('startWorkNavLink');
+    if (startWorkNavLink) {
+        console.log('Start work nav link found'); // Debug log
+        startWorkNavLink.addEventListener('click', function(e) {
             e.preventDefault();
-            showDashboardPage();
+            console.log('Start work nav link clicked'); // Debug log
+            showStartWorkPage();
         });
+    } else {
+        console.error('Start work nav link not found'); // Debug log
     }
-
-    // Upgrade buttons
-    document.getElementById('upgradeToPremiumBtn').addEventListener('click', function() {
-        if (confirm('Are you sure you want to upgrade to the Premium Plan for ₹2999?')) {
-            // Simulate payment processing
-            showLoading('Processing payment...');
-            setTimeout(() => {
-                // Update user's plan
-                currentUser.plan = 'premium';
-                currentUser.planExpiry = new Date();
-                currentUser.planExpiry.setMonth(currentUser.planExpiry.getMonth() + 3);
-                
-                // Update UI
-                updateDashboardData();
-                hideLoading();
-                
-                // Show success message
-                showAlert('Plan upgraded successfully!', 'success');
-                
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
-            }, 2000);
-        }
-    });
-
-    document.getElementById('upgradeToProfessionalBtn').addEventListener('click', function() {
-        if (confirm('Are you sure you want to upgrade to the Professional Plan for ₹9999?')) {
-            // Simulate payment processing
-            showLoading('Processing payment...');
-            setTimeout(() => {
-                // Update user's plan
-                currentUser.plan = 'professional';
-                currentUser.planExpiry = new Date();
-                currentUser.planExpiry.setFullYear(currentUser.planExpiry.getFullYear() + 1);
-                
-                // Update UI
-                updateDashboardData();
-                hideLoading();
-                
-                // Show success message
-                showAlert('Plan upgraded successfully!', 'success');
-                
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
-            }, 2000);
-        }
-    });
 
     // Initialize profile
     initializeProfile();
