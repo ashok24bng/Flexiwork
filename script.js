@@ -1205,7 +1205,10 @@ function showLandingPage() {
 }
 
 function showDashboardPage() {
-    console.log('showDashboardPage called'); // Debug log
+    console.log("showDashboardPage function called");
+    document.getElementById('startWorkPage').style.display = 'none';
+    document.getElementById('dashboardPage').style.display = 'block';
+}
     
     // Save current page state
     savePageState('dashboard');
