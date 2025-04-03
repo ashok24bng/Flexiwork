@@ -186,27 +186,257 @@ document.addEventListener('DOMContentLoaded', function() {
     const savedLoginState = localStorage.getItem('isLoggedIn');
     
     if (savedUser && savedLoginState === 'true') {
-        console.log('User is logged in, showing dashboard');
-        currentUser = JSON.parse(savedUser);
-        isLoggedIn = true;
-        showDashboardPage();
+        try {
+            console.log('User is logged in, showing dashboard');
+            currentUser = JSON.parse(savedUser);
+            isLoggedIn = true;
+            showDashboardPage();
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            isLoggedIn = false;
+            showLandingPage();
+        }
     } else {
         console.log('No user logged in, showing landing page');
         isLoggedIn = false;
         showLandingPage();
     }
+    
+    // Initialize activity tracking
+    initializeActivityTracking();
+    
+    // Start session checker
+    setInterval(checkSession, 60000); // Check every minute
 });
+
+// Generate a random user ID
+function generateUserId() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+// Login form submission
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    console.log('Login form submitted');
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+        showAlert('Please enter both email and password', 'error');
+        return;
+    }
+    
+    // Create or load user data
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        try {
+            currentUser = JSON.parse(savedUser);
+            // Update user data if email matches
+            if (currentUser.email === email) {
+                currentUser.name = email.split('@')[0]; // Update name if needed
+            } else {
+                // Create new user if email doesn't match
+                currentUser = {
+                    id: generateUserId(),
+                    name: email.split('@')[0],
+                    email: email,
+                    plan: 'free',
+                    earningWallet: 0,
+                    referralBonus: 0,
+                    entriesToday: 0,
+                    totalEntries: 0,
+                    totalEarnings: 0,
+                    transactions: [],
+                    referrals: [],
+                    referredUsers: [],
+                    bankDetails: null,
+                    referralCode: generateReferralCode()
+                };
+            }
+        } catch (error) {
+            console.error('Error parsing saved user data:', error);
+            // Create new user if there's an error
+            currentUser = {
+                id: generateUserId(),
+                name: email.split('@')[0],
+                email: email,
+                plan: 'free',
+                earningWallet: 0,
+                referralBonus: 0,
+                entriesToday: 0,
+                totalEntries: 0,
+                totalEarnings: 0,
+                transactions: [],
+                referrals: [],
+                referredUsers: [],
+                bankDetails: null,
+                referralCode: generateReferralCode()
+            };
+        }
+    } else {
+        // Create new user if no saved user exists
+        currentUser = {
+            id: generateUserId(),
+            name: email.split('@')[0],
+            email: email,
+            plan: 'free',
+            earningWallet: 0,
+            referralBonus: 0,
+            entriesToday: 0,
+            totalEntries: 0,
+            totalEarnings: 0,
+            transactions: [],
+            referrals: [],
+            referredUsers: [],
+            bankDetails: null,
+            referralCode: generateReferralCode()
+        };
+    }
+    
+    // Update login state
+    isLoggedIn = true;
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('lastActivity', Date.now().toString());
+    } catch (error) {
+        console.error('Error saving user data:', error);
+        showAlert('Error saving user data. Please try again.', 'error');
+        return;
+    }
+    
+    // Initialize session timeout
+    initializeSessionTimeout();
+    
+    // Close login modal
+    const loginModalInstance = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+    if (loginModalInstance) {
+        loginModalInstance.hide();
+    }
+    
+    // Show dashboard
+    showDashboardPage();
+    
+    // Show success message
+    showAlert('Logged in successfully!', 'success');
+    
+    // Reset form
+    this.reset();
+});
+
+// Update session management
+function initializeActivityTracking() {
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    
+    activityEvents.forEach(eventType => {
+        document.addEventListener(eventType, updateLastActivity);
+    });
+}
+
+// Check session status
+function checkSession() {
+    if (!isLoggedIn) return;
+    
+    const lastActivity = localStorage.getItem('lastActivity');
+    if (!lastActivity) return;
+    
+    const currentTime = Date.now();
+    const timeSinceLastActivity = currentTime - parseInt(lastActivity);
+    
+    // Log out if inactive for 5 minutes (300000 milliseconds)
+    if (timeSinceLastActivity > 300000) {
+        console.log('Session expired due to inactivity');
+        logout();
+        showAlert('Your session has expired due to inactivity. Please log in again.', 'warning');
+    }
+}
+
+// Start session checker
+setInterval(checkSession, 60000); // Check every minute
+
+// Logout function
+function logout() {
+    console.log('Logging out user');
+    
+    // Clear user data
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('lastActivity');
+    
+    // Reset state
+    isLoggedIn = false;
+    currentUser = null;
+    
+    // Show landing page
+    showLandingPage();
+    
+    // Show success message
+    showAlert('Logged out successfully!', 'success');
+}
 
 // Initialize UI elements
 function initializeUIElements() {
     // Initialize modals
     const loginModalElement = document.getElementById('loginModal');
     const registerModalElement = document.getElementById('registerModal');
+    
     if (loginModalElement) {
-        loginModal = new bootstrap.Modal(loginModalElement);
+        loginModal = new bootstrap.Modal(loginModalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        
+        // Add event listener for modal hidden event
+        loginModalElement.addEventListener('hidden.bs.modal', function() {
+            if (isLoggedIn) {
+                showDashboardPage();
+            }
+        });
     }
+    
     if (registerModalElement) {
-        registerModal = new bootstrap.Modal(registerModalElement);
+        registerModal = new bootstrap.Modal(registerModalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
+    
+    // Initialize activity tracking
+    initializeActivityTracking();
+    
+    // Add event listeners for navigation
+    const startWorkBtn = document.getElementById('startWorkBtn');
+    if (startWorkBtn) {
+        startWorkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Start work button clicked');
+            showStartWorkPage();
+        });
+    }
+    
+    const backToDashboardBtn = document.getElementById('backToDashboard');
+    if (backToDashboardBtn) {
+        backToDashboardBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Back to dashboard button clicked');
+            showDashboardPage();
+        });
+    }
+    
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Logout button clicked');
+            logout();
+        });
     }
 }
 
@@ -248,17 +478,20 @@ function showLandingPage() {
 // Show dashboard page
 function showDashboardPage() {
     console.log('Showing dashboard page');
+    
+    // Check if user is logged in
+    if (!isLoggedIn || !currentUser) {
+        console.error('Attempted to show dashboard while not logged in');
+        showLandingPage();
+        return;
+    }
+    
+    // Hide landing page and show dashboard
     const landingPage = document.getElementById('landingPage');
     const dashboardPage = document.getElementById('dashboardPage');
     const startWorkPage = document.getElementById('startWorkPage');
     const mainNav = document.querySelector('.navbar:not(#dashboardNav)');
     const dashboardNav = document.getElementById('dashboardNav');
-    
-    if (!isLoggedIn) {
-        console.error('Attempted to show dashboard while not logged in');
-        showLandingPage();
-        return;
-    }
     
     if (landingPage) {
         landingPage.style.display = 'none';
@@ -268,7 +501,6 @@ function showDashboardPage() {
     if (dashboardPage) {
         dashboardPage.style.display = 'block';
         dashboardPage.classList.remove('d-none');
-        updateDashboardData();
     }
     
     if (startWorkPage) {
@@ -276,6 +508,7 @@ function showDashboardPage() {
         startWorkPage.classList.add('d-none');
     }
     
+    // Update navigation visibility
     if (mainNav) {
         mainNav.style.display = 'none';
         mainNav.classList.add('d-none');
@@ -286,14 +519,16 @@ function showDashboardPage() {
         dashboardNav.classList.remove('d-none');
         
         // Update user section in dashboard nav
-        const userSection = dashboardNav.querySelector('.user-section');
+        const userSection = dashboardNav.querySelector('#userSection');
         const authButtons = dashboardNav.querySelector('.auth-buttons');
         
         if (userSection) {
             userSection.style.display = 'flex';
+            userSection.classList.remove('d-none');
         }
         if (authButtons) {
             authButtons.style.display = 'none';
+            authButtons.classList.add('d-none');
         }
     }
     
@@ -302,70 +537,77 @@ function showDashboardPage() {
     if (usernameDisplay && currentUser) {
         usernameDisplay.textContent = currentUser.name;
     }
+    
+    // Update dashboard data
+    updateDashboardData();
+    
+    // Force a reflow to ensure display changes take effect
+    document.body.offsetHeight;
+    
+    // Scroll to top of dashboard
+    window.scrollTo(0, 0);
+    
+    // Log success
+    console.log('Dashboard page displayed successfully');
 }
 
-// Login form submission
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    console.log('Login form submitted');
+// Show start work page
+function showStartWorkPage() {
+    console.log('Showing start work page');
     
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    if (!email || !password) {
-        showAlert('Please enter both email and password', 'error');
+    // Check if user is logged in
+    if (!isLoggedIn || !currentUser) {
+        console.error('User is not logged in or currentUser is null');
+        showAlert('Please log in to access the Data Entry Work page', 'error');
         return;
     }
     
-    // Create or load user data
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-    } else {
-        currentUser = {
-            id: generateUserId(),
-            name: email.split('@')[0],
-            email: email,
-            plan: 'free',
-            earningWallet: 0,
-            referralBonus: 0,
-            entriesToday: 0,
-            totalEntries: 0,
-            totalEarnings: 0,
-            transactions: [],
-            referrals: [],
-            referredUsers: [],
-            bankDetails: null,
-            referralCode: generateReferralCode()
-        };
+    // Hide other pages and show start work page
+    const landingPage = document.getElementById('landingPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const startWorkPage = document.getElementById('startWorkPage');
+    const mainNav = document.querySelector('.navbar:not(#dashboardNav)');
+    const dashboardNav = document.getElementById('dashboardNav');
+    
+    if (landingPage) {
+        landingPage.style.display = 'none';
+        landingPage.classList.add('d-none');
     }
     
-    // Update login state
-    isLoggedIn = true;
-    
-    // Save to localStorage
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('lastActivity', Date.now().toString());
-    
-    // Initialize session timeout
-    initializeSessionTimeout();
-    
-    // Close login modal
-    const loginModalInstance = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-    if (loginModalInstance) {
-        loginModalInstance.hide();
+    if (dashboardPage) {
+        dashboardPage.style.display = 'none';
+        dashboardPage.classList.add('d-none');
     }
     
-    // Show dashboard
-    showDashboardPage();
+    if (startWorkPage) {
+        startWorkPage.style.display = 'block';
+        startWorkPage.classList.remove('d-none');
+        
+        // Update work page data
+        updateWorkPageData();
+        
+        // Load initial sample data
+        refreshSampleData();
+    }
     
-    // Show success message
-    showAlert('Logged in successfully!', 'success');
+    // Update navigation visibility
+    if (mainNav) {
+        mainNav.style.display = 'none';
+        mainNav.classList.add('d-none');
+    }
     
-    // Reset form
-    this.reset();
-});
+    if (dashboardNav) {
+        dashboardNav.style.display = 'block';
+        dashboardNav.classList.remove('d-none');
+        
+        // Ensure user section is visible
+        const userSection = dashboardNav.querySelector('.user-section');
+        if (userSection) {
+            userSection.style.display = 'flex';
+            userSection.classList.remove('d-none');
+        }
+    }
+}
 
 // Register function
 document.getElementById('registerForm').addEventListener('submit', function(e) {
@@ -457,13 +699,6 @@ function processReferral(code) {
         saveUserData();
     }
 }
-
-// Logout function
-logoutBtn.addEventListener('click', function() {
-    isLoggedIn = false;
-    currentUser = null;
-    updateUI();
-});
 
 // Navigation
 homeLink.addEventListener('click', function(e) {
@@ -613,13 +848,6 @@ function updateDashboardData() {
 
 // Setup dashboard event listeners
 function setupDashboardEventListeners() {
-    // Start Work button
-    document.getElementById('startWorkBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('Start work button clicked'); // Debug log
-        showStartWorkPage();
-    });
-
     // Wallet buttons
     document.getElementById('withdrawEarningsBtn').addEventListener('click', () => showWithdrawalModal('earning'));
     document.getElementById('withdrawBonusBtn').addEventListener('click', () => showWithdrawalModal('bonus'));
@@ -1180,25 +1408,6 @@ function resetFormAndShowNewData() {
     
     // Show new data for next entry
     refreshSampleData();
-}
-
-// Update transaction history
-function updateTransactionHistory() {
-    const tbody = document.getElementById('transactionHistory');
-    if (!currentUser.transactions || currentUser.transactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No transactions yet</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = currentUser.transactions.map(transaction => `
-        <tr>
-            <td>${transaction.date}</td>
-            <td>${transaction.type}</td>
-            <td>₹${transaction.amount.toFixed(2)}</td>
-            <td><span class="badge bg-success">${transaction.status}</span></td>
-            <td>${transaction.details}</td>
-        </tr>
-    `).join('');
 }
 
 // Load YouTube IFrame API
