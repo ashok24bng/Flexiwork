@@ -2,42 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlexiWork - Freelance Data Entry Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#007bff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>FlexiWork - Earn Money Online</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <!-- Main Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
         <div class="container">
             <a class="navbar-brand" href="#" id="homeLink">
                 <i class="fas fa-keyboard me-2"></i>FlexiWork
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto logged-out-only">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-bars me-1"></i>Menu
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="#about"><i class="fas fa-info-circle me-2"></i>About</a></li>
-                            <li><a class="dropdown-item" href="#how-it-works"><i class="fas fa-question-circle me-2"></i>How It Works</a></li>
-                            <li><a class="dropdown-item" href="#pricing"><i class="fas fa-tags me-2"></i>Pricing</a></li>
-                            <li><a class="dropdown-item" href="#demo"><i class="fas fa-play-circle me-2"></i>Demo</a></li>
-                            <li><a class="dropdown-item" href="#contact"><i class="fas fa-envelope me-2"></i>Contact</a></li>
-                        </ul>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pricing">Pricing</a>
                     </li>
                 </ul>
                 <div class="d-flex" id="authButtons">
-                    <button class="btn btn-outline-light me-2 logged-out-only" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    <button class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal">
                         <i class="fas fa-sign-in-alt me-1"></i>Login
                     </button>
-                    <button class="btn btn-primary logged-out-only" data-bs-toggle="modal" data-bs-target="#registerModal">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerModal">
                         <i class="fas fa-user-plus me-1"></i>Register
                     </button>
                 </div>
@@ -45,7 +45,7 @@
         </div>
     </nav>
 
-    <!-- Dashboard Navigation (Only visible when logged in) -->
+    <!-- Dashboard Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top logged-in-only" id="dashboardNav">
         <div class="container">
             <a class="navbar-brand" href="#" id="dashboardHomeLink">
@@ -72,7 +72,7 @@
                         </a>
                     </li>
                 </ul>
-                <div class="d-flex" id="userSection">
+                <div class="d-flex align-items-center" id="userSection">
                     <span class="navbar-text me-3">
                         <i class="fas fa-user-circle me-1"></i>
                         <span id="usernameDisplay">User</span>
@@ -185,7 +185,7 @@
                     <div class="col-lg-8">
                         <div class="video-container">
                             <div class="ratio ratio-16x9">
-                                <iframe src="https://www.youtube.com/embed/example" allowfullscreen></iframe>
+                                <iframe src="https://www.youtube.com/embed/mt-9V0qL1X0" allowfullscreen></iframe>
                             </div>
                         </div>
                     </div>
@@ -194,61 +194,63 @@
         </section>
 
         <!-- Pricing Section -->
-        <section id="pricing" class="py-5 bg-light">
+        <section id="pricing" class="py-5">
             <div class="container">
-                <h2 class="section-title text-center fw-bold mb-5">Choose Your Plan</h2>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card pricing-card mb-4">
-                            <div class="card-header pricing-header text-center py-3">
-                                <h4 class="my-0 fw-normal">Free</h4>
+                <h2 class="text-center mb-4">Choose Your Plan</h2>
+                <div class="row justify-content-center">
+                    <!-- Free Plan -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h3 class="text-center mb-0">Free</h3>
                             </div>
                             <div class="card-body">
-                                <h1 class="card-title pricing-card-title text-center">₹0<small class="text-muted fw-light">/mo</small></h1>
-                                <ul class="list-unstyled mt-3 mb-4">
-                                    <li><i class="fas fa-check text-success me-2"></i> ₹0.50 per entry</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> Max 10 entries per day</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> 60-second ads after each entry</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> Basic support</li>
-                                    <li><i class="fas fa-times text-danger me-2"></i> No referral bonus</li>
+                                <h4 class="text-center mb-4">₹0/mo</h4>
+                                <ul class="list-unstyled">
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>₹0.50 per entry</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>Max 10 entries per day</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>60-second ads after each entry</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>Basic support</li>
+                                    <li class="mb-3"><i class="fas fa-times text-danger me-2"></i>No referral bonus</li>
                                 </ul>
-                                <button type="button" class="btn btn-lg btn-outline-primary w-100">Current Plan</button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card pricing-card mb-4">
-                            <div class="card-header pricing-header text-center py-3">
-                                <h4 class="my-0 fw-normal">Premium</h4>
+
+                    <!-- Premium Plan -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h3 class="text-center mb-0">Premium</h3>
                             </div>
                             <div class="card-body">
-                                <h1 class="card-title pricing-card-title text-center">₹2999<small class="text-muted fw-light">/3mo</small></h1>
-                                <ul class="list-unstyled mt-3 mb-4">
-                                    <li><i class="fas fa-check text-success me-2"></i> ₹1 per entry</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> Max 50 entries per day</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> No ads for 3 months</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> Priority support</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> 10% referral bonus</li>
+                                <h4 class="text-center mb-4">₹2999/3mo</h4>
+                                <ul class="list-unstyled">
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>₹1 per entry</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>Max 50 entries per day</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>No ads for 3 months</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>Priority support</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>10% referral bonus</li>
                                 </ul>
-                                <button type="button" class="btn btn-lg btn-primary w-100">Upgrade</button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card pricing-card mb-4">
-                            <div class="card-header pricing-header text-center py-3">
-                                <h4 class="my-0 fw-normal">Professional</h4>
+
+                    <!-- Professional Plan -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h3 class="text-center mb-0">Professional</h3>
                             </div>
                             <div class="card-body">
-                                <h1 class="card-title pricing-card-title text-center">₹9999<small class="text-muted fw-light">/year</small></h1>
-                                <ul class="list-unstyled mt-3 mb-4">
-                                    <li><i class="fas fa-check text-success me-2"></i> ₹3 per entry</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> Max 50 entries per day</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> No ads for 1 year</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> 24/7 priority support</li>
-                                    <li><i class="fas fa-check text-success me-2"></i> 10% referral bonus</li>
+                                <h4 class="text-center mb-4">₹9999/year</h4>
+                                <ul class="list-unstyled">
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>₹3 per entry</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>Max 50 entries per day</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>No ads for 1 year</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>Priority support</li>
+                                    <li class="mb-3"><i class="fas fa-check text-success me-2"></i>10% referral bonus</li>
                                 </ul>
-                                <button type="button" class="btn btn-lg btn-primary w-100">Upgrade</button>
                             </div>
                         </div>
                     </div>
@@ -277,6 +279,7 @@
                             <li><a href="#about" class="text-white">About Us</a></li>
                             <li><a href="#how-it-works" class="text-white">How It Works</a></li>
                             <li><a href="#pricing" class="text-white">Pricing</a></li>
+                            <li><a href="#" class="text-white" data-bs-toggle="modal" data-bs-target="#faqModal">FAQ</a></li>
                         </ul>
                     </div>
                     <div class="col-md-3">
@@ -546,35 +549,72 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Current Plan Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Current Plan</h5>
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#upgradeModal">
+                        <i class="fas fa-arrow-up me-2"></i>Upgrade Plan
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 id="currentPlanName">Free Plan</h4>
+                            <p class="text-muted" id="currentPlanExpiry"></p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Rate: <span id="currentPlanRate">₹0.50</span> per entry</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Max <span id="currentPlanMaxEntries">10</span> entries per day</li>
+                                <li id="currentPlanAdsStatus"><i class="fas fa-check text-success me-2"></i>60-second ads after each entry</li>
+                                <li id="currentPlanSupport"><i class="fas fa-check text-success me-2"></i>Basic support</li>
+                                <li id="currentPlanReferral"><i class="fas fa-times text-danger me-2"></i>No referral bonus</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h5 class="alert-heading">Upgrade Benefits</h5>
+                                <p class="mb-0">Upgrade to Premium or Professional plan to:</p>
+                                <ul class="mb-0">
+                                    <li>Earn more per entry (up to ₹3)</li>
+                                    <li>Remove ads</li>
+                                    <li>Get priority support</li>
+                                    <li>Earn referral bonuses</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Data Entry Work Page -->
     <div id="startWorkPage" class="work-page" style="display: none;">
         <div class="container py-4">
+            <!-- Header Section -->
             <div class="row mb-4">
                 <div class="col-md-6">
                     <h2 class="text-primary">Data Entry Work</h2>
                     <p class="text-muted">Plan: <span id="workPagePlan" class="badge bg-primary">Free Plan</span></p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <button class="btn btn-outline-primary" id="backToDashboard" onclick="showDashboardPage()">
+                    <button class="btn btn-outline-primary" id="backToDashboard">
                         <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
                     </button>
                 </div>
             </div>
 
-            <!-- Work Progress -->
-            <div class="card">
+            <!-- Progress Section -->
+            <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Data Entry Work</h5>
-                    <small class="text-white-50">Plan: <span id="workPagePlan">Free Plan</span> | Rate: ₹<span id="workPageRate">0.50</span> per entry</small>
+                    <h5 class="mb-0">Today's Progress</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-4">
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Today's Progress</span>
+                                <span>Entries Today</span>
                                 <span class="badge bg-primary" id="entriesCounter">0/10</span>
                             </div>
                             <div class="progress">
@@ -588,108 +628,83 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Data Entry Form -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Enter Data</h5>
-                        </div>
-                        <div class="card-body">
-                            <!-- Sample Data Display -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Business Data</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Company Name</th>
-                                                    <th>City</th>
-                                                    <th>Country</th>
-                                                    <th>Zip Code</th>
-                                                    <th>Business ID</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="sampleDataBody">
-                                                <!-- Sample data will be loaded here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="text-center mt-3">
-                                        <button class="btn btn-primary" onclick="refreshSampleData()">
-                                            <i class="fas fa-sync-alt me-2"></i>Refresh Data
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <form id="dataEntryForm">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="companyName" class="form-label">Company Name</label>
-                                        <input type="text" class="form-control" id="companyName" required>
-                                        <div class="invalid-feedback">Please enter a valid company name</div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="city" class="form-label">City</label>
-                                        <input type="text" class="form-control" id="city" required>
-                                        <div class="invalid-feedback">Please enter a valid city</div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="country" class="form-label">Country</label>
-                                        <input type="text" class="form-control" id="country" required>
-                                        <div class="invalid-feedback">Please enter a valid country</div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="zipCode" class="form-label">Zip Code</label>
-                                        <input type="text" class="form-control" id="zipCode" required>
-                                        <div class="invalid-feedback">Please enter a valid zip code</div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label for="businessId" class="form-label">Business ID</label>
-                                        <input type="text" class="form-control" id="businessId" required>
-                                        <div class="invalid-feedback">Please enter a valid business ID</div>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary" id="submitEntryBtn">
-                                        <i class="fas fa-paper-plane me-2"></i>Submit Entry
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+            <!-- Data Entry Form -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Enter Data</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <button class="btn btn-primary" onclick="refreshSampleData()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                        </button>
                     </div>
+                    <form id="dataEntryForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="companyName" class="form-label">Company Name (Future Enterprises)</label>
+                                <input type="text" class="form-control" id="companyName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City (Kolkata)</label>
+                                <input type="text" class="form-control" id="city" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="country" class="form-label">Country (India)</label>
+                                <input type="text" class="form-control" id="country" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="zipCode" class="form-label">Zip Code (700001)</label>
+                                <input type="text" class="form-control" id="zipCode" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="businessId" class="form-label">Business ID (FUT175533)</label>
+                                <input type="text" class="form-control" id="businessId" required>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary" id="submitEntryBtn">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Entry
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Ad Modal for Free Plan -->
-    <div class="modal fade" id="adModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <!-- Ad Modal -->
+    <div class="modal fade" id="adModal" tabindex="-1" aria-labelledby="adModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Advertisement</h5>
+                    <h5 class="modal-title" id="adModalLabel">Watch Advertisement</h5>
                 </div>
-                <div class="modal-body text-center">
-                    <div class="video-container mb-3">
-                        <div class="ratio ratio-16x9">
-                            <iframe id="adVideo" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <!-- YouTube Video Player -->
+                        <div id="youtubePlayer"></div>
                     </div>
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Please watch the video for 30 seconds to continue. Timer will pause if you leave this window.
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="adStatus">Please watch the ad to continue...</span>
+                        </div>
+                        <div class="mt-2">
+                            <i class="fas fa-clock me-2"></i>
+                            <span id="adTimer">30 seconds remaining</span>
+                        </div>
                     </div>
-                    <p id="adTimer" class="mb-2">30 seconds remaining</p>
-                    <p id="adStatus" class="mb-2">Please watch the ad to continue...</p>
-                    <button class="btn btn-primary" id="continueButton" disabled>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="continueButton" disabled>
                         <i class="fas fa-lock me-2"></i>Watch Ad to Continue
                     </button>
                 </div>
@@ -791,36 +806,45 @@
         </div>
     </div>
 
-    <!-- Refer Modal -->
+    <!-- Refer & Earn Modal -->
     <div class="modal fade" id="referModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="card-header bg-success text-white">
-                    <h5 class="modal-title mb-0">Refer & Earn</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title">Refer & Earn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="card-body">
-                    <div class="referral-link-container">
-                        <h6>Your Referral Link</h6>
-                        <div class="input-group input-group-lg">
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                        <h4>Invite Friends & Earn 10%</h4>
+                        <p class="text-muted">Share your referral link and earn 10% of your referrals' earnings</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Your Referral Link</label>
+                        <div class="input-group">
                             <input type="text" class="form-control" id="referralLink" readonly>
-                            <button class="btn btn-outline-success" type="button" id="copyReferralLink">
-                                <i class="fas fa-copy me-2"></i>Copy Link
+                            <button class="btn btn-primary" type="button" id="copyReferralLink">
+                                <i class="fas fa-copy"></i>
                             </button>
                         </div>
                     </div>
+                    
                     <div class="mb-4">
-                        <h6 class="text-success mb-3">How it Works</h6>
+                        <h6>How it works:</h6>
                         <ul class="list-unstyled">
-                            <li><i class="fas fa-check"></i>Share your referral link with friends and family</li>
-                            <li><i class="fas fa-check"></i>They sign up using your unique referral link</li>
-                            <li><i class="fas fa-check"></i>When they purchase a premium plan, you earn 10% of their payment</li>
-                            <li><i class="fas fa-check"></i>Your earnings are credited to your bonus wallet</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Share your referral link with friends</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>They sign up using your link</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>You earn 10% of their earnings</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Earnings are credited to your bonus wallet</li>
                         </ul>
                     </div>
-                    <div class="alert alert-success">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Your referral bonus will be automatically credited to your bonus wallet when your referrals make a purchase.
+                    
+                    <div class="text-center">
+                        <button class="btn btn-primary" onclick="shareReferralLink()">
+                            <i class="fas fa-share-alt me-2"></i>Share Link
+                        </button>
                     </div>
                 </div>
             </div>
@@ -879,6 +903,10 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>How to Upgrade:</strong> Refer 5 users who upgrade to Premium Plan to get a free upgrade to Professional Plan!
+                    </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card mb-4">
@@ -906,12 +934,18 @@
                                     <h5 class="mb-0">Professional Plan</h5>
                                 </div>
                                 <div class="card-body">
-                                    <h2 class="card-title">₹9999<small class="text-muted">/year</small></h2>
+                                    <div class="referral-progress mb-3">
+                                        <h6>Referral Progress</h6>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" id="referralProgressBar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="text-muted"><span id="premiumReferralCount">0</span>/5 Premium referrals needed</small>
+                                    </div>
                                     <ul class="list-unstyled">
                                         <li><i class="fas fa-check text-success me-2"></i> ₹3 per entry</li>
                                         <li><i class="fas fa-check text-success me-2"></i> Max 50 entries per day</li>
                                         <li><i class="fas fa-check text-success me-2"></i> No ads for 1 year</li>
-                                        <li><i class="fas fa-check text-success me-2"></i> 24/7 priority support</li>
+                                        <li><i class="fas fa-check text-success me-2"></i> Priority support</li>
                                         <li><i class="fas fa-check text-success me-2"></i> 10% referral bonus</li>
                                     </ul>
                                     <button class="btn btn-success w-100" id="upgradeToProfessionalBtn">
@@ -921,9 +955,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Your current plan will be upgraded immediately after payment. Any remaining time from your current plan will be added to your new plan.
+                    <div class="alert alert-success">
+                        <i class="fas fa-gift me-2"></i>
+                        <strong>Free Professional Upgrade:</strong> Get 5 users to upgrade to Premium Plan using your referral link and receive a free upgrade to Professional Plan!
                     </div>
                 </div>
             </div>
@@ -1041,6 +1075,75 @@
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Modal -->
+    <div class="modal fade" id="faqModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Frequently Asked Questions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    How do I start earning money?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Simply register for an account, complete your profile, and start working on data entry tasks. You'll earn money for each approved entry.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    How much can I earn?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Earnings depend on your plan:
+                                    <ul>
+                                        <li>Free Plan: ₹0.50 per entry (max 10 entries/day)</li>
+                                        <li>Premium Plan: ₹1 per entry (max 50 entries/day)</li>
+                                        <li>Professional Plan: ₹3 per entry (max 50 entries/day)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    How do I withdraw my earnings?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    You can withdraw your earnings once you reach ₹300. Add your bank details in the wallet section and request a withdrawal. Payments are processed within 24 hours.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    What is the referral program?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Share your referral link with friends. When they join and start earning, you'll receive 10% of their earnings as a bonus in your wallet.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
