@@ -15,6 +15,10 @@ let currentUser = {
     bankDetails: null
 };
 
+// Session management
+const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+let sessionTimeout;
+
 // DOM Elements
 const authButtons = document.getElementById('authButtons');
 const userSection = document.getElementById('userSection');
@@ -29,51 +33,21 @@ const startWorkPage = document.getElementById('startWorkPage');
 const landingPage = document.getElementById('landingPage');
 const dashboardNav = document.getElementById('dashboardNav');
 const mainNav = document.querySelector('.navbar:not(#dashboardNav)');
-const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+let loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+let registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
 
 // YouTube ad videos (international)
 const youtubeAds = [
-    {
-        id: "dQw4w9WgXcQ", // Example: Rick Astley - Never Gonna Give You Up
-        title: "International Ad 1"
-    },
-    {
-        id: "JGwWNGJdvx8", // Example: Ed Sheeran - Shape of You
-        title: "International Ad 2"
-    },
-    {
-        id: "OPf0YbXqDm0", // Example: Mark Ronson - Uptown Funk
-        title: "International Ad 3"
-    },
-    {
-        id: "kJQP7kiw5Fk", // Example: Luis Fonsi - Despacito
-        title: "International Ad 4"
-    },
-    {
-        id: "RgKAFK5djSk", // Example: Wiz Khalifa - See You Again
-        title: "International Ad 5"
-    },
-    {
-        id: "09R8_2nJtjg", // Example: Maroon 5 - Sugar
-        title: "International Ad 6"
-    },
-    {
-        id: "HP8S_1Y5j8E", // Example: Justin Bieber - Sorry
-        title: "International Ad 7"
-    },
-    {
-        id: "YqeW9_5kURI", // Example: Major Lazer - Lean On
-        title: "International Ad 8"
-    },
-    {
-        id: "YQHsXMglC9A", // Example: Adele - Hello
-        title: "International Ad 9"
-    },
-    {
-        id: "JGwWNGJdvx8", // Example: Ed Sheeran - Shape of You
-        title: "International Ad 10"
-    }
+    { id: "dQw4w9WgXcQ", title: "International Ad 1" },
+    { id: "JGwWNGJdvx8", title: "International Ad 2" },
+    { id: "OPf0YbXqDm0", title: "International Ad 3" },
+    { id: "kJQP7kiw5Fk", title: "International Ad 4" },
+    { id: "RgKAFK5djSk", title: "International Ad 5" },
+    { id: "09R8_2nJtjg", title: "International Ad 6" },
+    { id: "HP8S_1Y5j8E", title: "International Ad 7" },
+    { id: "YqeW9_5kURI", title: "International Ad 8" },
+    { id: "YQHsXMglC9A", title: "International Ad 9" },
+    { id: "JGwWNGJdvx8", title: "International Ad 10" }
 ];
 
 let currentAdIndex = 0;
@@ -122,20 +96,36 @@ const sampleData = [
 
 let currentSampleIndex = 0;
 
-// Update session management variables
-const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
-let sessionTimeout;
-
-// Update loadUserData function
+// Load user data from localStorage
 function loadUserData() {
     const savedUser = localStorage.getItem('currentUser');
     const savedLoginState = localStorage.getItem('isLoggedIn');
+    const lastActivity = localStorage.getItem('lastActivity');
     
     if (savedUser && savedLoginState === 'true') {
         try {
+            // Check if session has expired
+            if (lastActivity) {
+                const currentTime = Date.now();
+                const timeSinceLastActivity = currentTime - parseInt(lastActivity);
+                
+                if (timeSinceLastActivity > SESSION_TIMEOUT) {
+                    // Session expired due to inactivity
+                    console.log('Session expired due to inactivity');
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('lastActivity');
+                    return null;
+                }
+            }
+            
             currentUser = JSON.parse(savedUser);
             isLoggedIn = true;
             console.log('User data loaded successfully:', currentUser);
+            
+            // Update last activity time to extend session
+            updateLastActivity();
+            
             return currentUser;
         } catch (error) {
             console.error('Error loading user data:', error);
@@ -145,12 +135,12 @@ function loadUserData() {
     return null;
 }
 
-// Add function to update last activity timestamp
+// Update last activity timestamp
 function updateLastActivity() {
     localStorage.setItem('lastActivity', Date.now().toString());
 }
 
-// Update initializeSessionTimeout function
+// Initialize session timeout
 function initializeSessionTimeout() {
     // Clear any existing timeout
     if (sessionTimeout) {
@@ -166,12 +156,68 @@ function initializeSessionTimeout() {
     }, SESSION_TIMEOUT);
 }
 
-// Update resetSessionTimeout function
+// Reset session timeout on user activity
 function resetSessionTimeout() {
     if (isLoggedIn) {
         updateLastActivity();
         initializeSessionTimeout();
     }
+}
+
+// Initialize activity tracking
+function initializeActivityTracking() {
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    
+    activityEvents.forEach(eventType => {
+        document.addEventListener(eventType, function() {
+            if (isLoggedIn) {
+                updateLastActivity();
+                resetSessionTimeout();
+            }
+        });
+    });
+}
+
+// Check session status periodically
+function checkSession() {
+    if (!isLoggedIn) return;
+    
+    const lastActivity = localStorage.getItem('lastActivity');
+    if (!lastActivity) return;
+    
+    const currentTime = Date.now();
+    const timeSinceLastActivity = currentTime - parseInt(lastActivity);
+    
+    if (timeSinceLastActivity > SESSION_TIMEOUT) {
+        console.log('Session expired due to inactivity');
+        logout();
+        showAlert('Your session has expired due to inactivity. Please log in again.', 'warning');
+    }
+}
+
+// Logout function
+function logout() {
+    console.log('Logging out user');
+    
+    // Clear user data
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('lastActivity');
+    
+    // Clear any existing timeout
+    if (sessionTimeout) {
+        clearTimeout(sessionTimeout);
+    }
+    
+    // Reset state
+    isLoggedIn = false;
+    currentUser = null;
+    
+    // Show landing page
+    showLandingPage();
+    
+    // Show success message
+    showAlert('Logged out successfully!', 'success');
 }
 
 // Initialize on page load
@@ -182,20 +228,11 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeUIElements();
     
     // Load user data and check login state
-    const savedUser = localStorage.getItem('currentUser');
-    const savedLoginState = localStorage.getItem('isLoggedIn');
+    const user = loadUserData();
     
-    if (savedUser && savedLoginState === 'true') {
-        try {
-            console.log('User is logged in, showing dashboard');
-            currentUser = JSON.parse(savedUser);
-            isLoggedIn = true;
-            showDashboardPage();
-        } catch (error) {
-            console.error('Error loading user data:', error);
-            isLoggedIn = false;
-            showLandingPage();
-        }
+    if (user) {
+        console.log('User is logged in, showing dashboard');
+        showDashboardPage();
     } else {
         console.log('No user logged in, showing landing page');
         isLoggedIn = false;
@@ -305,7 +342,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     try {
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('lastActivity', Date.now().toString());
+        updateLastActivity();
     } catch (error) {
         console.error('Error saving user data:', error);
         showAlert('Error saving user data. Please try again.', 'error');
@@ -330,56 +367,6 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     // Reset form
     this.reset();
 });
-
-// Update session management
-function initializeActivityTracking() {
-    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    
-    activityEvents.forEach(eventType => {
-        document.addEventListener(eventType, updateLastActivity);
-    });
-}
-
-// Check session status
-function checkSession() {
-    if (!isLoggedIn) return;
-    
-    const lastActivity = localStorage.getItem('lastActivity');
-    if (!lastActivity) return;
-    
-    const currentTime = Date.now();
-    const timeSinceLastActivity = currentTime - parseInt(lastActivity);
-    
-    // Log out if inactive for 5 minutes (300000 milliseconds)
-    if (timeSinceLastActivity > 300000) {
-        console.log('Session expired due to inactivity');
-        logout();
-        showAlert('Your session has expired due to inactivity. Please log in again.', 'warning');
-    }
-}
-
-// Start session checker
-setInterval(checkSession, 60000); // Check every minute
-
-// Logout function
-function logout() {
-    console.log('Logging out user');
-    
-    // Clear user data
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('lastActivity');
-    
-    // Reset state
-    isLoggedIn = false;
-    currentUser = null;
-    
-    // Show landing page
-    showLandingPage();
-    
-    // Show success message
-    showAlert('Logged out successfully!', 'success');
-}
 
 // Initialize UI elements
 function initializeUIElements() {
@@ -407,9 +394,6 @@ function initializeUIElements() {
             keyboard: false
         });
     }
-    
-    // Initialize activity tracking
-    initializeActivityTracking();
     
     // Add event listeners for navigation
     const startWorkBtn = document.getElementById('startWorkBtn');
@@ -609,58 +593,6 @@ function showStartWorkPage() {
     }
 }
 
-// Register function
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
-    const referralCode = document.getElementById('referralCode').value;
-    
-    // Validate passwords match
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-    }
-    
-    // Simulate registration (in a real app, this would be an API call)
-    if (name && email && password) {
-        isLoggedIn = true;
-        currentUser = {
-            name: name,
-            email: email,
-            plan: 'free',
-            earningWallet: 0,
-            referralBonus: 0,
-            entriesToday: 0,
-            totalEntries: 0,
-            totalEarnings: 0,
-            transactions: [],
-            referrals: [],
-            bankDetails: null,
-            referralCode: generateReferralCode() // Generate referral code for new user
-        };
-        
-        // Process referral if provided
-        if (referralCode) {
-            processReferral(referralCode);
-        }
-        
-        // Save user data
-        saveUserData();
-        
-        // Update UI
-        updateUI();
-        
-        // Close modal
-        const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
-        if (registerModal) {
-            registerModal.hide();
-        }
-    }
-});
-
 // Generate a random referral code
 function generateReferralCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -669,35 +601,6 @@ function generateReferralCode() {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
-}
-
-// Process referral code
-function processReferral(code) {
-    // In a real app, this would check the database for the referral code
-    if (code) {
-        // Initialize referrals array if it doesn't exist
-        if (!currentUser.referrals) {
-            currentUser.referrals = [];
-        }
-        
-        // Add new referral
-        currentUser.referrals.push({
-            code: code,
-            date: new Date().toLocaleDateString(),
-            status: 'active',
-            plan: 'free', // Initial plan
-            bonusEarned: 0
-        });
-        
-        // Check if eligible for professional upgrade
-        const premiumReferrals = checkReferralEligibility();
-        if (premiumReferrals >= 5 && currentUser.plan !== 'professional') {
-            showAlert('Congratulations! You are now eligible for a free upgrade to Professional Plan!', 'success');
-        }
-        
-        // Save user data
-        saveUserData();
-    }
 }
 
 // Navigation
@@ -722,41 +625,6 @@ backToDashboard.addEventListener('click', function(e) {
     e.preventDefault();
     showDashboardPage();
 });
-
-function updateUserData() {
-    if (!currentUser) return;
-    
-    // Update user display
-    document.getElementById('usernameDisplay').textContent = currentUser.name;
-    document.getElementById('dashboardUsername').textContent = currentUser.name;
-    document.getElementById('workPageUsername').textContent = currentUser.name;
-    
-    // Update plan display
-    const planDisplay = currentUser.plan === 'free' ? 'Free Plan' : 
-                      currentUser.plan === 'premium3' ? 'Premium Plan (3 months)' : 'Professional Plan (1 year)';
-    document.getElementById('userPlanDisplay').textContent = planDisplay;
-    document.getElementById('workPagePlan').textContent = planDisplay;
-    
-    // Update rate badge
-    const rate = currentUser.plan === 'free' ? '₹0.50' : 
-                 currentUser.plan === 'premium3' ? '₹1' : '₹3';
-    document.getElementById('currentRateBadge').textContent = `Rate: ${rate} per entry`;
-    
-    // Update max daily entries
-    const maxEntries = currentUser.plan === 'free' ? 10 : 50;
-    document.getElementById('maxDailyEntries').textContent = maxEntries;
-    document.getElementById('entriesCounter').textContent = `Entries today: ${currentUser.entriesToday}/${maxEntries}`;
-    
-    // Update progress bar
-    const progressPercent = (currentUser.entriesToday / maxEntries) * 100;
-    document.getElementById('dailyProgressBar').style.width = `${progressPercent}%`;
-}
-
-// Dashboard functionality
-function initializeDashboard() {
-    updateDashboardData();
-    setupDashboardEventListeners();
-}
 
 // Update dashboard data
 function updateDashboardData() {
@@ -846,225 +714,6 @@ function updateDashboardData() {
     }
 }
 
-// Setup dashboard event listeners
-function setupDashboardEventListeners() {
-    // Wallet buttons
-    document.getElementById('withdrawEarningsBtn').addEventListener('click', () => showWithdrawalModal('earning'));
-    document.getElementById('withdrawBonusBtn').addEventListener('click', () => showWithdrawalModal('bonus'));
-
-    // Bank details form
-    document.getElementById('bankDetailsForm').addEventListener('submit', handleBankDetailsSubmit);
-
-    // Withdrawal form
-    document.getElementById('withdrawalForm').addEventListener('submit', handleWithdrawalSubmit);
-
-    // Copy referral link
-    document.getElementById('copyReferralLink').addEventListener('click', copyReferralLink);
-}
-
-// Show wallet modal
-function showWalletModal() {
-    const modal = new bootstrap.Modal(document.getElementById('walletModal'));
-    updateWalletModalData();
-    modal.show();
-}
-
-// Update wallet modal data
-function updateWalletModalData() {
-    // Update wallet balances
-    document.getElementById('modalEarningWallet').textContent = currentUser.earningWallet.toFixed(2);
-    document.getElementById('modalBonusWallet').textContent = currentUser.bonusWallet.toFixed(2);
-
-    // Update bank details if available
-    if (currentUser.bankDetails) {
-        document.getElementById('accountName').value = currentUser.bankDetails.name;
-        document.getElementById('accountNumber').value = currentUser.bankDetails.number;
-        document.getElementById('ifscCode').value = currentUser.bankDetails.ifsc;
-    }
-
-    // Enable/disable withdrawal buttons
-    document.getElementById('withdrawEarningsBtn').disabled = currentUser.earningWallet < 300 || !currentUser.bankDetails;
-    document.getElementById('withdrawBonusBtn').disabled = currentUser.bonusWallet <= 0 || !currentUser.bankDetails;
-
-    // Update withdrawal history
-    updateWithdrawalHistory();
-}
-
-// Show withdrawal modal
-function showWithdrawalModal(walletType) {
-    const modal = new bootstrap.Modal(document.getElementById('withdrawalModal'));
-    document.getElementById('walletType').value = walletType;
-    
-    // Update amount field based on wallet type
-    const amountInput = document.getElementById('withdrawalAmount');
-    const minAmountText = document.getElementById('minAmountText');
-    
-    if (walletType === 'earning') {
-        amountInput.value = Math.min(currentUser.earningWallet, 300);
-        minAmountText.style.display = 'block';
-    } else {
-        amountInput.value = currentUser.bonusWallet;
-        minAmountText.style.display = 'none';
-    }
-    
-    // Update bank details display
-    if (currentUser.bankDetails) {
-        document.getElementById('withdrawalAccountName').textContent = currentUser.bankDetails.name;
-        document.getElementById('withdrawalAccountNumber').textContent = currentUser.bankDetails.number;
-        document.getElementById('withdrawalIfscCode').textContent = currentUser.bankDetails.ifsc;
-    }
-    
-    modal.show();
-}
-
-// Handle bank details submission
-function handleBankDetailsSubmit(e) {
-    e.preventDefault();
-    currentUser.bankDetails = {
-        name: document.getElementById('accountName').value,
-        number: document.getElementById('accountNumber').value,
-        ifsc: document.getElementById('ifscCode').value
-    };
-    
-    // Save user data immediately after updating
-    saveUserData();
-    
-    updateWalletModalData();
-    showAlert('Bank details saved successfully!');
-}
-
-// Handle withdrawal submission
-function handleWithdrawalSubmit(e) {
-    e.preventDefault();
-    const amount = parseFloat(document.getElementById('withdrawalAmount').value);
-    const walletType = document.getElementById('walletType').value;
-    
-    // Validate withdrawal
-    if (walletType === 'earning' && amount < 300) {
-        showAlert('Minimum withdrawal amount is ₹300');
-        return;
-    }
-
-    if (walletType === 'earning' && amount > currentUser.earningWallet) {
-        showAlert('Insufficient balance in earning wallet');
-        return;
-    }
-
-    if (walletType === 'bonus' && amount > currentUser.bonusWallet) {
-        showAlert('Insufficient balance in bonus wallet');
-        return;
-    }
-
-    if (!currentUser.bankDetails) {
-        showAlert('Please add bank details before making a withdrawal');
-        return;
-    }
-
-    // Create withdrawal record
-    const withdrawal = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString(),
-        amount: amount,
-        walletType: walletType,
-        status: 'pending',
-        processedDate: null,
-        bankDetails: {
-            name: currentUser.bankDetails.name,
-            number: currentUser.bankDetails.number,
-            ifsc: currentUser.bankDetails.ifsc
-        }
-    };
-
-    // Add to transactions
-    currentUser.transactions.push({
-        date: withdrawal.date,
-        type: 'withdrawal',
-        amount: amount,
-        walletType: walletType,
-        status: 'pending',
-        withdrawalId: withdrawal.id
-    });
-
-    // Update wallet balance
-    if (walletType === 'earning') {
-        currentUser.earningWallet -= amount;
-    } else {
-        currentUser.bonusWallet -= amount;
-    }
-
-    // Save user data immediately after updating
-    saveUserData();
-
-    // Update UI
-    updateWalletModalData();
-    bootstrap.Modal.getInstance(document.getElementById('withdrawalModal')).hide();
-    showAlert('Withdrawal request submitted successfully! Processing time: 24 hours');
-}
-
-// Update transaction history
-function updateTransactionHistory() {
-    const tbody = document.getElementById('transactionHistory');
-    if (currentUser.transactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No transactions yet</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = currentUser.transactions.map(transaction => `
-        <tr>
-            <td>${transaction.date}</td>
-            <td>${transaction.type}</td>
-            <td>₹${transaction.amount.toFixed(2)}</td>
-            <td><span class="badge bg-${transaction.status === 'pending' ? 'warning' : 'success'}">${transaction.status}</span></td>
-            <td>${transaction.walletType === 'earning' ? 'Earning Wallet' : 'Bonus Wallet'}</td>
-        </tr>
-    `).join('');
-}
-
-// Update referred users
-function updateReferredUsers() {
-    const tbody = document.getElementById('referredUsers');
-    if (currentUser.referredUsers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No referrals yet</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = currentUser.referredUsers.map(user => `
-        <tr>
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td>${user.joinDate}</td>
-            <td><span class="badge bg-${user.status === 'active' ? 'success' : 'warning'}">${user.status}</span></td>
-            <td>₹${user.bonusEarned.toFixed(2)}</td>
-        </tr>
-    `).join('');
-}
-
-// Update referral link
-function updateReferralLink() {
-    if (!currentUser || !currentUser.referralCode) {
-        console.error('No referral code found for current user');
-        return;
-    }
-    
-    const baseUrl = window.location.origin;
-    const referralLink = `${baseUrl}/register?ref=${currentUser.referralCode}`;
-    const referralLinkInput = document.getElementById('referralLink');
-    if (referralLinkInput) {
-        referralLinkInput.value = referralLink;
-        console.log('Referral link updated:', referralLink); // Debug log
-    } else {
-        console.error('Referral link input element not found');
-    }
-}
-
-// Copy referral link
-function copyReferralLink() {
-    const referralLink = document.getElementById('referralLink');
-    referralLink.select();
-    document.execCommand('copy');
-    showAlert('Referral link copied to clipboard!');
-}
-
 // Helper function to get rate per entry based on plan
 function getRatePerEntry() {
     return currentUser.plan === 'free' ? 0.50 : 
@@ -1090,7 +739,7 @@ function showAlert(message, type = 'success') {
 
 // Update work page data
 function updateWorkPageData() {
-    console.log('Updating work page data'); // Debug log
+    console.log('Updating work page data');
     
     // Check if user is logged in
     if (!isLoggedIn || !currentUser) {
@@ -1131,23 +780,7 @@ function updateWorkPageData() {
         workProgressBar.style.width = `${progressPercentage}%`;
     }
     
-    console.log('Work page data updated successfully'); // Debug log
-}
-
-// Display sample data
-function displaySampleData() {
-    const tbody = document.getElementById('sampleDataBody');
-    const currentData = sampleData[currentSampleIndex];
-    
-    tbody.innerHTML = `
-        <tr>
-            <td>${currentData.companyName}</td>
-            <td>${currentData.city}</td>
-            <td>${currentData.country}</td>
-            <td>${currentData.zipCode}</td>
-            <td>${currentData.businessId}</td>
-        </tr>
-    `;
+    console.log('Work page data updated successfully');
 }
 
 // Function to refresh sample data
@@ -1174,24 +807,6 @@ function refreshSampleData() {
     document.getElementById('country').value = '';
     document.getElementById('zipCode').value = '';
     document.getElementById('businessId').value = '';
-}
-
-// Generate random data
-function generateRandomData() {
-    const companies = ['Tech Solutions', 'Global Enterprises', 'Innovative Systems', 'Digital Solutions', 'Future Tech'];
-    const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai'];
-    const countries = ['India', 'India', 'India', 'India', 'India'];
-    const zipCodes = ['400001', '110001', '560001', '500001', '600001'];
-    
-    const randomIndex = Math.floor(Math.random() * companies.length);
-    
-    return {
-        companyName: companies[randomIndex],
-        city: cities[randomIndex],
-        country: countries[randomIndex],
-        zipCode: zipCodes[randomIndex],
-        businessId: `BIZ${Math.floor(100000 + Math.random() * 900000)}`
-    };
 }
 
 // Data validation function
@@ -1288,7 +903,7 @@ function highlightField(fieldId) {
 // Handle form submission
 document.getElementById('dataEntryForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    console.log('Form submitted'); // Debug log
+    console.log('Form submitted');
     
     // Get form data
     const formData = {
@@ -1299,7 +914,7 @@ document.getElementById('dataEntryForm').addEventListener('submit', function(e) 
         businessId: document.getElementById('businessId').value.trim()
     };
 
-    console.log('Form data:', formData); // Debug log
+    console.log('Form data:', formData);
 
     // Check if any field is empty
     if (!formData.companyName || !formData.city || !formData.country || !formData.zipCode || !formData.businessId) {
@@ -1410,6 +1025,18 @@ function resetFormAndShowNewData() {
     refreshSampleData();
 }
 
+// Save user data to localStorage
+function saveUserData() {
+    try {
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('isLoggedIn', 'true');
+        updateLastActivity();
+    } catch (error) {
+        console.error('Error saving user data:', error);
+        showAlert('Error saving user data. Please try again.', 'error');
+    }
+}
+
 // Load YouTube IFrame API
 let tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
@@ -1422,7 +1049,7 @@ function onYouTubeIframeAPIReady() {
     console.log('YouTube API Ready');
 }
 
-// Update showAdModal function
+// Show ad modal
 function showAdModal(formData) {
     const adModal = new bootstrap.Modal(document.getElementById('adModal'));
     const timerElement = document.getElementById('adTimer');
@@ -1566,153 +1193,149 @@ function showAdModal(formData) {
     });
 }
 
-// Update withdrawal history
-function updateWithdrawalHistory() {
-    const tbody = document.getElementById('withdrawalHistory');
-    const withdrawals = currentUser.transactions.filter(t => t.type === 'withdrawal');
-    
-    if (withdrawals.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No withdrawal history yet</td></tr>';
+// Update transaction history
+function updateTransactionHistory() {
+    const tbody = document.getElementById('transactionHistory');
+    if (currentUser.transactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No transactions yet</td></tr>';
         return;
     }
 
-    tbody.innerHTML = withdrawals.map(withdrawal => `
+    tbody.innerHTML = currentUser.transactions.map(transaction => `
         <tr>
-            <td>${withdrawal.date}</td>
-            <td>₹${withdrawal.amount.toFixed(2)}</td>
-            <td>${withdrawal.walletType === 'earning' ? 'Earning Wallet' : 'Bonus Wallet'}</td>
-            <td>
-                <span class="badge bg-${withdrawal.status === 'pending' ? 'warning' : 'success'}">
-                    ${withdrawal.status}
-                </span>
-            </td>
-            <td>${withdrawal.processedDate || '-'}</td>
+            <td>${transaction.date}</td>
+            <td>${transaction.type}</td>
+            <td>₹${transaction.amount.toFixed(2)}</td>
+            <td><span class="badge bg-${transaction.status === 'pending' ? 'warning' : 'success'}">${transaction.status}</span></td>
+            <td>${transaction.walletType === 'earning' ? 'Earning Wallet' : 'Bonus Wallet'}</td>
         </tr>
     `).join('');
 }
 
-// Plan upgrade functionality
-function checkReferralEligibility() {
-    if (!currentUser.referrals) return 0;
-    // Count premium referrals
-    return currentUser.referrals.filter(ref => ref.plan === 'premium' && ref.status === 'active').length;
-}
-
-// Update referral progress in upgrade modal
-function updateReferralProgress() {
-    const premiumReferrals = (currentUser.referrals || []).filter(ref => ref.plan === 'premium').length;
-    const progressPercentage = (premiumReferrals / 5) * 100;
-    
-    document.getElementById('premiumReferralCount').textContent = premiumReferrals;
-    const progressBar = document.getElementById('referralProgressBar');
-    progressBar.style.width = `${Math.min(progressPercentage, 100)}%`;
-    progressBar.setAttribute('aria-valuenow', progressPercentage);
-    
-    // Enable/disable Professional upgrade button based on referral count
-    const upgradeToProfessionalBtn = document.getElementById('upgradeToProfessionalBtn');
-    if (premiumReferrals >= 5) {
-        upgradeToProfessionalBtn.disabled = false;
-        upgradeToProfessionalBtn.innerHTML = '<i class="fas fa-arrow-up me-2"></i>Claim Free Upgrade';
-    } else {
-        upgradeToProfessionalBtn.disabled = true;
-        upgradeToProfessionalBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Get 5 Premium Referrals';
+// Update referred users
+function updateReferredUsers() {
+    const tbody = document.getElementById('referredUsers');
+    if (!currentUser.referredUsers || currentUser.referredUsers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No referrals yet</td></tr>';
+        return;
     }
+
+    tbody.innerHTML = currentUser.referredUsers.map(user => `
+        <tr>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${user.joinDate}</td>
+            <td><span class="badge bg-${user.status === 'active' ? 'success' : 'warning'}">${user.status}</span></td>
+            <td>₹${user.bonusEarned.toFixed(2)}</td>
+        </tr>
+    `).join('');
 }
 
-// Event listener for upgrade buttons
-document.getElementById('upgradeToPremiumBtn').addEventListener('click', function() {
-    if (currentUser.plan === 'professional') {
-        alert('You are already on a higher plan!');
+// Update referral link
+function updateReferralLink() {
+    if (!currentUser || !currentUser.referralCode) {
+        console.error('No referral code found for current user');
         return;
     }
     
-    if (confirm('Upgrade to Premium Plan for ₹2999 for 3 months?')) {
-        // Process premium upgrade
-        currentUser.plan = 'premium';
-        currentUser.planExpiry = new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)); // 90 days
-        saveUserData();
-        updateDashboardData();
-        alert('Successfully upgraded to Premium Plan!');
-        
-        // Add transaction record
-        addTransaction({
-            date: new Date(),
-            type: 'Plan Upgrade',
-            amount: 2999,
-            status: 'Completed',
-            details: 'Upgraded to Premium Plan'
-        });
-        
-        // Close modal
-        bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
+    const baseUrl = window.location.origin;
+    const referralLink = `${baseUrl}/register?ref=${currentUser.referralCode}`;
+    const referralLinkInput = document.getElementById('referralLink');
+    if (referralLinkInput) {
+        referralLinkInput.value = referralLink;
+        console.log('Referral link updated:', referralLink);
+    } else {
+        console.error('Referral link input element not found');
     }
-});
+}
 
-document.getElementById('upgradeToProfessionalBtn').addEventListener('click', function() {
-    if (currentUser.plan === 'professional') {
-        alert('You are already on the Professional Plan!');
+// Copy referral link
+function copyReferralLink() {
+    const referralLink = document.getElementById('referralLink');
+    referralLink.select();
+    document.execCommand('copy');
+    showAlert('Referral link copied to clipboard!');
+}
+
+// Register function
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const referralCode = document.getElementById('referralCode').value;
+    
+    // Validate passwords match
+    if (password !== confirmPassword) {
+        showAlert('Passwords do not match', 'error');
         return;
     }
     
-    const premiumReferrals = (currentUser.referrals || []).filter(ref => ref.plan === 'premium').length;
-    if (premiumReferrals >= 5) {
-        // Process free professional upgrade
-        currentUser.plan = 'professional';
-        currentUser.planExpiry = new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)); // 365 days
-        saveUserData();
-        updateDashboardData();
-        alert('Congratulations! You have been upgraded to the Professional Plan for free!');
+    // Simulate registration
+    if (name && email && password) {
+        isLoggedIn = true;
+        currentUser = {
+            id: generateUserId(),
+            name: name,
+            email: email,
+            plan: 'free',
+            earningWallet: 0,
+            referralBonus: 0,
+            entriesToday: 0,
+            totalEntries: 0,
+            totalEarnings: 0,
+            transactions: [],
+            referrals: [],
+            referredUsers: [],
+            bankDetails: null,
+            referralCode: generateReferralCode()
+        };
         
-        // Add transaction record
-        addTransaction({
-            date: new Date(),
-            type: 'Plan Upgrade',
-            amount: 0,
-            status: 'Completed',
-            details: 'Free upgrade to Professional Plan (Referral Reward)'
-        });
+        // Process referral if provided
+        if (referralCode) {
+            processReferral(referralCode);
+        }
+        
+        // Save user data
+        saveUserData();
         
         // Close modal
-        bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
-    } else {
-        alert(`You need ${5 - premiumReferrals} more Premium referrals to get a free Professional upgrade!`);
+        const registerModalInstance = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+        if (registerModalInstance) {
+            registerModalInstance.hide();
+        }
+        
+        // Show dashboard
+        showDashboardPage();
+        
+        // Show success message
+        showAlert('Registered successfully!', 'success');
+        
+        // Reset form
+        this.reset();
     }
 });
 
-// Update the modal when it's opened
-document.getElementById('upgradeModal').addEventListener('show.bs.modal', function() {
-    updateReferralProgress();
-});
-
-// Function to load sample data into the form labels
-function loadSampleData() {
-    const sampleData = {
-        companyName: "Future Enterprises",
-        city: "Kolkata",
-        country: "India",
-        zipCode: "700001",
-        businessId: "FUT175533"
-    };
-
-    // Update the form labels with sample data
-    document.querySelector('label[for="companyName"]').textContent = `Company Name (${sampleData.companyName})`;
-    document.querySelector('label[for="city"]').textContent = `City (${sampleData.city})`;
-    document.querySelector('label[for="country"]').textContent = `Country (${sampleData.country})`;
-    document.querySelector('label[for="zipCode"]').textContent = `Zip Code (${sampleData.zipCode})`;
-    document.querySelector('label[for="businessId"]').textContent = `Business ID (${sampleData.businessId})`;
-
-    // Clear any existing input in the form fields
-    document.getElementById('companyName').value = '';
-    document.getElementById('city').value = '';
-    document.getElementById('country').value = '';
-    document.getElementById('zipCode').value = '';
-    document.getElementById('businessId').value = '';
+// Process referral code
+function processReferral(code) {
+    // In a real app, this would check the database for the referral code
+    if (code) {
+        // Initialize referrals array if it doesn't exist
+        if (!currentUser.referrals) {
+            currentUser.referrals = [];
+        }
+        
+        // Add new referral
+        currentUser.referrals.push({
+            code: code,
+            date: new Date().toLocaleDateString(),
+            status: 'active',
+            plan: 'free',
+            bonusEarned: 0
+        });
+        
+        // Save user data
+        saveUserData();
+    }
 }
-
-// Call loadSampleData when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadSampleData();
-});
-
-// Initialize UI
-updateUI(); 
