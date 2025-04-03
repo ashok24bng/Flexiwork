@@ -122,11 +122,35 @@ const sampleData = [
 
 let currentSampleIndex = 0;
 
-// Session management
-let sessionTimeout;
+// Update session management variables
 const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+let sessionTimeout;
 
-// Initialize session timeout
+// Update loadUserData function
+function loadUserData() {
+    const savedUser = localStorage.getItem('currentUser');
+    const savedLoginState = localStorage.getItem('isLoggedIn');
+    
+    if (savedUser && savedLoginState === 'true') {
+        try {
+            currentUser = JSON.parse(savedUser);
+            isLoggedIn = true;
+            console.log('User data loaded successfully:', currentUser);
+            return currentUser;
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            return null;
+        }
+    }
+    return null;
+}
+
+// Add function to update last activity timestamp
+function updateLastActivity() {
+    localStorage.setItem('lastActivity', Date.now().toString());
+}
+
+// Update initializeSessionTimeout function
 function initializeSessionTimeout() {
     // Clear any existing timeout
     if (sessionTimeout) {
@@ -137,156 +161,210 @@ function initializeSessionTimeout() {
     sessionTimeout = setTimeout(() => {
         if (isLoggedIn) {
             logout();
-            showAlert('You have been logged out due to inactivity');
+            showAlert('You have been logged out due to inactivity', 'warning');
         }
     }, SESSION_TIMEOUT);
 }
 
-// Reset session timeout on user activity
+// Update resetSessionTimeout function
 function resetSessionTimeout() {
-    initializeSessionTimeout();
-}
-
-// Add event listeners for user activity
-document.addEventListener('mousemove', resetSessionTimeout);
-document.addEventListener('keypress', resetSessionTimeout);
-document.addEventListener('click', resetSessionTimeout);
-document.addEventListener('scroll', resetSessionTimeout);
-
-// Store user data in localStorage
-function saveUserData() {
-    if (currentUser) {
-        localStorage.setItem('currentUser', JSON.stringify({
-            id: currentUser.id,
-            name: currentUser.name,
-            email: currentUser.email,
-            plan: currentUser.plan,
-            earningWallet: currentUser.earningWallet,
-            referralBonus: currentUser.referralBonus,
-            entriesToday: currentUser.entriesToday,
-            totalEntries: currentUser.totalEntries,
-            totalEarnings: currentUser.totalEarnings,
-            transactions: currentUser.transactions,
-            referrals: currentUser.referrals,
-            bankDetails: currentUser.bankDetails
-        }));
-        localStorage.setItem('isLoggedIn', 'true');
+    if (isLoggedIn) {
+        updateLastActivity();
+        initializeSessionTimeout();
     }
 }
 
-// Load user data from localStorage
-function loadUserData() {
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded event fired');
+    
+    // Initialize UI elements
+    initializeUIElements();
+    
+    // Load user data and check login state
     const savedUser = localStorage.getItem('currentUser');
     const savedLoginState = localStorage.getItem('isLoggedIn');
     
     if (savedUser && savedLoginState === 'true') {
+        console.log('User is logged in, showing dashboard');
         currentUser = JSON.parse(savedUser);
-        
-        // Special handling for fanofspbsir@gmail.com
-        if (currentUser.email === 'fanofspbsir@gmail.com') {
-            // Ensure entries count is at least 2
-            if (!currentUser.entriesToday || currentUser.entriesToday < 2) {
-                currentUser.entriesToday = 2;
-                currentUser.totalEntries = (currentUser.totalEntries || 0) + 2;
-                currentUser.earningWallet = (currentUser.earningWallet || 0) + (2 * getRatePerEntry());
-                currentUser.totalEarnings = (currentUser.totalEarnings || 0) + (2 * getRatePerEntry());
-                
-                // Add transactions if not already present
-                if (currentUser.transactions.length < 2) {
-                    currentUser.transactions.push({
-                        date: new Date().toLocaleDateString(),
-                        type: 'entry',
-                        amount: getRatePerEntry(),
-                        status: 'completed'
-                    });
-                    currentUser.transactions.push({
-                        date: new Date().toLocaleDateString(),
-                        type: 'entry',
-                        amount: getRatePerEntry(),
-                        status: 'completed'
-                    });
-                }
-                
-                // Save the updated data
-                saveUserData();
-            }
-        }
-        
         isLoggedIn = true;
-        updateUI();
-        initializeSessionTimeout();
-        return currentUser;
-    }
-    return null;
-}
-
-// Update logout function
-function logout() {
-    // Save user data before logging out
-    saveUserData();
-    
-    // Clear session data but keep user data in localStorage
-    isLoggedIn = false;
-    currentUser = null;
-    
-    // Update UI
-    updateUI();
-    
-    // Clear session timeout
-    if (sessionTimeout) {
-        clearTimeout(sessionTimeout);
-    }
-}
-
-// Update login function
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    // Simulate login (in a real app, this would be an API call)
-    if (email && password) {
-        // Load existing user data from localStorage
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-        } else {
-            // Create new user if no saved data exists
-            currentUser = {
-                id: '07301133-629c-490c-891f-4ce86ad0459b',
-                name: email.split('@')[0],
-                email: email,
-                plan: 'free',
-                earningWallet: 0,
-                referralBonus: 0,
-                entriesToday: 0,
-                totalEntries: 0,
-                totalEarnings: 0,
-                transactions: [],
-                referrals: [],
-                bankDetails: null
-            };
-        }
-        
-        isLoggedIn = true;
-        
-        // Save user data and initialize session
-        saveUserData();
-        initializeSessionTimeout();
-        
-        // Update UI
-        updateUI();
-        
-        // Reset form
-        this.reset();
+        showDashboardPage();
     } else {
-        showAlert('Please enter both email and password', 'error');
+        console.log('No user logged in, showing landing page');
+        isLoggedIn = false;
+        showLandingPage();
     }
 });
 
-// Load user data when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadUserData();
+// Initialize UI elements
+function initializeUIElements() {
+    // Initialize modals
+    const loginModalElement = document.getElementById('loginModal');
+    const registerModalElement = document.getElementById('registerModal');
+    if (loginModalElement) {
+        loginModal = new bootstrap.Modal(loginModalElement);
+    }
+    if (registerModalElement) {
+        registerModal = new bootstrap.Modal(registerModalElement);
+    }
+}
+
+// Show landing page
+function showLandingPage() {
+    console.log('Showing landing page');
+    const landingPage = document.getElementById('landingPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const startWorkPage = document.getElementById('startWorkPage');
+    const mainNav = document.querySelector('.navbar:not(#dashboardNav)');
+    const dashboardNav = document.getElementById('dashboardNav');
+    
+    if (landingPage) {
+        landingPage.style.display = 'block';
+        landingPage.classList.remove('d-none');
+    }
+    
+    if (dashboardPage) {
+        dashboardPage.style.display = 'none';
+        dashboardPage.classList.add('d-none');
+    }
+    
+    if (startWorkPage) {
+        startWorkPage.style.display = 'none';
+        startWorkPage.classList.add('d-none');
+    }
+    
+    if (mainNav) {
+        mainNav.style.display = 'block';
+        mainNav.classList.remove('d-none');
+    }
+    
+    if (dashboardNav) {
+        dashboardNav.style.display = 'none';
+        dashboardNav.classList.add('d-none');
+    }
+}
+
+// Show dashboard page
+function showDashboardPage() {
+    console.log('Showing dashboard page');
+    const landingPage = document.getElementById('landingPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const startWorkPage = document.getElementById('startWorkPage');
+    const mainNav = document.querySelector('.navbar:not(#dashboardNav)');
+    const dashboardNav = document.getElementById('dashboardNav');
+    
+    if (!isLoggedIn) {
+        console.error('Attempted to show dashboard while not logged in');
+        showLandingPage();
+        return;
+    }
+    
+    if (landingPage) {
+        landingPage.style.display = 'none';
+        landingPage.classList.add('d-none');
+    }
+    
+    if (dashboardPage) {
+        dashboardPage.style.display = 'block';
+        dashboardPage.classList.remove('d-none');
+        updateDashboardData();
+    }
+    
+    if (startWorkPage) {
+        startWorkPage.style.display = 'none';
+        startWorkPage.classList.add('d-none');
+    }
+    
+    if (mainNav) {
+        mainNav.style.display = 'none';
+        mainNav.classList.add('d-none');
+    }
+    
+    if (dashboardNav) {
+        dashboardNav.style.display = 'block';
+        dashboardNav.classList.remove('d-none');
+        
+        // Update user section in dashboard nav
+        const userSection = dashboardNav.querySelector('.user-section');
+        const authButtons = dashboardNav.querySelector('.auth-buttons');
+        
+        if (userSection) {
+            userSection.style.display = 'flex';
+        }
+        if (authButtons) {
+            authButtons.style.display = 'none';
+        }
+    }
+    
+    // Update user display
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    if (usernameDisplay && currentUser) {
+        usernameDisplay.textContent = currentUser.name;
+    }
+}
+
+// Login form submission
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    console.log('Login form submitted');
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+        showAlert('Please enter both email and password', 'error');
+        return;
+    }
+    
+    // Create or load user data
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+    } else {
+        currentUser = {
+            id: generateUserId(),
+            name: email.split('@')[0],
+            email: email,
+            plan: 'free',
+            earningWallet: 0,
+            referralBonus: 0,
+            entriesToday: 0,
+            totalEntries: 0,
+            totalEarnings: 0,
+            transactions: [],
+            referrals: [],
+            referredUsers: [],
+            bankDetails: null,
+            referralCode: generateReferralCode()
+        };
+    }
+    
+    // Update login state
+    isLoggedIn = true;
+    
+    // Save to localStorage
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('lastActivity', Date.now().toString());
+    
+    // Initialize session timeout
+    initializeSessionTimeout();
+    
+    // Close login modal
+    const loginModalInstance = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+    if (loginModalInstance) {
+        loginModalInstance.hide();
+    }
+    
+    // Show dashboard
+    showDashboardPage();
+    
+    // Show success message
+    showAlert('Logged in successfully!', 'success');
+    
+    // Reset form
+    this.reset();
 });
 
 // Register function
@@ -307,15 +385,28 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     // Simulate registration (in a real app, this would be an API call)
     if (name && email && password) {
         isLoggedIn = true;
-        currentUser.name = name;
-        currentUser.email = email;
-        currentUser.plan = 'free';
-        currentUser.referralCode = generateReferralCode();
+        currentUser = {
+            name: name,
+            email: email,
+            plan: 'free',
+            earningWallet: 0,
+            referralBonus: 0,
+            entriesToday: 0,
+            totalEntries: 0,
+            totalEarnings: 0,
+            transactions: [],
+            referrals: [],
+            bankDetails: null,
+            referralCode: generateReferralCode() // Generate referral code for new user
+        };
         
         // Process referral if provided
         if (referralCode) {
             processReferral(referralCode);
         }
+        
+        // Save user data
+        saveUserData();
         
         // Update UI
         updateUI();
@@ -330,15 +421,40 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
 
 // Generate a random referral code
 function generateReferralCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
 }
 
 // Process referral code
 function processReferral(code) {
     // In a real app, this would check the database for the referral code
-    // and credit the referrer's bonus wallet
     if (code) {
-        currentUser.referralBonus = 0; // Will be updated when the referred user upgrades
+        // Initialize referrals array if it doesn't exist
+        if (!currentUser.referrals) {
+            currentUser.referrals = [];
+        }
+        
+        // Add new referral
+        currentUser.referrals.push({
+            code: code,
+            date: new Date().toLocaleDateString(),
+            status: 'active',
+            plan: 'free', // Initial plan
+            bonusEarned: 0
+        });
+        
+        // Check if eligible for professional upgrade
+        const premiumReferrals = checkReferralEligibility();
+        if (premiumReferrals >= 5 && currentUser.plan !== 'professional') {
+            showAlert('Congratulations! You are now eligible for a free upgrade to Professional Plan!', 'success');
+        }
+        
+        // Save user data
+        saveUserData();
     }
 }
 
@@ -411,19 +527,54 @@ function initializeDashboard() {
 function updateDashboardData() {
     if (!currentUser) return;
     
-    // Update username
+    // Update username and basic info
     document.getElementById('dashboardUsername').textContent = currentUser.name;
     document.getElementById('usernameDisplay').textContent = currentUser.name;
     
-    // Update plan display
-    document.getElementById('userPlanDisplay').textContent = currentUser.plan === 'free' ? 'Free Plan' : 
-        currentUser.plan === 'premium' ? 'Premium Plan' : 'Professional Plan';
+    // Update current plan details
+    const currentPlanName = document.getElementById('currentPlanName');
+    const currentPlanRate = document.getElementById('currentPlanRate');
+    const currentPlanMaxEntries = document.getElementById('currentPlanMaxEntries');
+    const currentPlanAdsStatus = document.getElementById('currentPlanAdsStatus');
+    const currentPlanSupport = document.getElementById('currentPlanSupport');
+    const currentPlanReferral = document.getElementById('currentPlanReferral');
+    const currentPlanExpiry = document.getElementById('currentPlanExpiry');
+
+    // Set plan name and expiry
+    if (currentUser.plan === 'premium') {
+        currentPlanName.textContent = 'Premium Plan';
+        currentPlanRate.textContent = '₹1.00';
+        currentPlanMaxEntries.textContent = '50';
+        currentPlanAdsStatus.innerHTML = '<i class="fas fa-check text-success me-2"></i>No ads for 3 months';
+        currentPlanSupport.innerHTML = '<i class="fas fa-check text-success me-2"></i>Priority support';
+        currentPlanReferral.innerHTML = '<i class="fas fa-check text-success me-2"></i>10% referral bonus';
+        if (currentUser.planExpiry) {
+            const expiry = new Date(currentUser.planExpiry);
+            currentPlanExpiry.textContent = `Valid until ${expiry.toLocaleDateString()}`;
+        }
+    } else if (currentUser.plan === 'professional') {
+        currentPlanName.textContent = 'Professional Plan';
+        currentPlanRate.textContent = '₹3.00';
+        currentPlanMaxEntries.textContent = '50';
+        currentPlanAdsStatus.innerHTML = '<i class="fas fa-check text-success me-2"></i>No ads for 1 year';
+        currentPlanSupport.innerHTML = '<i class="fas fa-check text-success me-2"></i>Priority support';
+        currentPlanReferral.innerHTML = '<i class="fas fa-check text-success me-2"></i>10% referral bonus';
+        if (currentUser.planExpiry) {
+            const expiry = new Date(currentUser.planExpiry);
+            currentPlanExpiry.textContent = `Valid until ${expiry.toLocaleDateString()}`;
+        }
+    } else {
+        currentPlanName.textContent = 'Free Plan';
+        currentPlanRate.textContent = '₹0.50';
+        currentPlanMaxEntries.textContent = '10';
+        currentPlanAdsStatus.innerHTML = '<i class="fas fa-check text-success me-2"></i>60-second ads after each entry';
+        currentPlanSupport.innerHTML = '<i class="fas fa-check text-success me-2"></i>Basic support';
+        currentPlanReferral.innerHTML = '<i class="fas fa-times text-danger me-2"></i>No referral bonus';
+        currentPlanExpiry.textContent = '';
+    }
     
-    // Update rate badge
+    // Update earnings and other stats
     const rate = getRatePerEntry();
-    document.getElementById('currentRateBadge').textContent = `Rate: ₹${rate.toFixed(2)} per entry`;
-    
-    // Update earnings
     const todayEarnings = (currentUser.entriesToday || 0) * rate;
     document.getElementById('dashboardTodayEarnings').textContent = todayEarnings.toFixed(2);
     document.getElementById('workPageTodayEarnings').textContent = todayEarnings.toFixed(2);
@@ -463,7 +614,9 @@ function updateDashboardData() {
 // Setup dashboard event listeners
 function setupDashboardEventListeners() {
     // Start Work button
-    document.getElementById('startWorkBtn').addEventListener('click', function() {
+    document.getElementById('startWorkBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Start work button clicked'); // Debug log
         showStartWorkPage();
     });
 
@@ -660,9 +813,20 @@ function updateReferredUsers() {
 
 // Update referral link
 function updateReferralLink() {
+    if (!currentUser || !currentUser.referralCode) {
+        console.error('No referral code found for current user');
+        return;
+    }
+    
     const baseUrl = window.location.origin;
     const referralLink = `${baseUrl}/register?ref=${currentUser.referralCode}`;
-    document.getElementById('referralLink').value = referralLink;
+    const referralLinkInput = document.getElementById('referralLink');
+    if (referralLinkInput) {
+        referralLinkInput.value = referralLink;
+        console.log('Referral link updated:', referralLink); // Debug log
+    } else {
+        console.error('Referral link input element not found');
+    }
 }
 
 // Copy referral link
@@ -698,35 +862,48 @@ function showAlert(message, type = 'success') {
 
 // Update work page data
 function updateWorkPageData() {
-    // Get user data
-    const userData = loadUserData();
-    if (!userData) return;
-
-    // Update plan and rate display
-    document.getElementById('workPagePlan').textContent = userData.plan;
-    document.getElementById('workPageRate').textContent = getRatePerEntry().toFixed(2);
-
-    // Calculate today's earnings
-    const todayEarnings = (userData.entriesToday || 0) * getRatePerEntry();
-    document.getElementById('workPageTodayEarnings').textContent = todayEarnings.toFixed(2);
-
-    // Update entries counter and progress bar
-    const entriesToday = userData.entriesToday || 0;
-    const maxEntries = userData.plan === 'free' ? 10 : 50;
-    const progressPercentage = (entriesToday / maxEntries) * 100;
-
-    document.getElementById('entriesCounter').textContent = `${entriesToday}/${maxEntries}`;
-    document.getElementById('workProgressBar').style.width = `${progressPercentage}%`;
-
-    // Update submit button state
-    const submitButton = document.getElementById('submitEntryBtn');
-    if (entriesToday >= maxEntries) {
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Daily Limit Reached';
-    } else {
-        submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Entry';
+    console.log('Updating work page data'); // Debug log
+    
+    // Check if user is logged in
+    if (!isLoggedIn || !currentUser) {
+        console.error('User is not logged in or currentUser is null');
+        return;
     }
+    
+    // Update plan and rate display
+    const workPagePlan = document.getElementById('workPagePlan');
+    const workPageRate = document.getElementById('workPageRate');
+    const workPageTodayEarnings = document.getElementById('workPageTodayEarnings');
+    const entriesCounter = document.getElementById('entriesCounter');
+    const workProgressBar = document.getElementById('workProgressBar');
+    
+    if (workPagePlan) {
+        workPagePlan.textContent = currentUser.plan === 'free' ? 'Free Plan' : 
+            currentUser.plan === 'premium' ? 'Premium Plan' : 'Professional Plan';
+    }
+    
+    if (workPageRate) {
+        const rate = getRatePerEntry();
+        workPageRate.textContent = rate.toFixed(2);
+    }
+    
+    if (workPageTodayEarnings) {
+        const todayEarnings = (currentUser.entriesToday || 0) * getRatePerEntry();
+        workPageTodayEarnings.textContent = todayEarnings.toFixed(2);
+    }
+    
+    if (entriesCounter) {
+        const maxEntries = currentUser.plan === 'free' ? 10 : 50;
+        entriesCounter.textContent = `${currentUser.entriesToday || 0}/${maxEntries}`;
+    }
+    
+    if (workProgressBar) {
+        const maxEntries = currentUser.plan === 'free' ? 10 : 50;
+        const progressPercentage = ((currentUser.entriesToday || 0) / maxEntries) * 100;
+        workProgressBar.style.width = `${progressPercentage}%`;
+    }
+    
+    console.log('Work page data updated successfully'); // Debug log
 }
 
 // Display sample data
@@ -745,7 +922,7 @@ function displaySampleData() {
     `;
 }
 
-// Refresh sample data
+// Function to refresh sample data
 function refreshSampleData() {
     // Get a random index different from the current one
     let newIndex;
@@ -754,21 +931,21 @@ function refreshSampleData() {
     } while (newIndex === currentSampleIndex);
     
     currentSampleIndex = newIndex;
+    const currentData = sampleData[currentSampleIndex];
     
-    // Update sample data display
-    const sampleDataBody = document.getElementById('sampleDataBody');
-    if (sampleDataBody) {
-        const currentData = sampleData[currentSampleIndex];
-        sampleDataBody.innerHTML = `
-            <tr>
-                <td>${currentData.companyName}</td>
-                <td>${currentData.city}</td>
-                <td>${currentData.country}</td>
-                <td>${currentData.zipCode}</td>
-                <td>${currentData.businessId}</td>
-            </tr>
-        `;
-    }
+    // Update the form labels with new data
+    document.querySelector('label[for="companyName"]').textContent = `Company Name (${currentData.companyName})`;
+    document.querySelector('label[for="city"]').textContent = `City (${currentData.city})`;
+    document.querySelector('label[for="country"]').textContent = `Country (${currentData.country})`;
+    document.querySelector('label[for="zipCode"]').textContent = `Zip Code (${currentData.zipCode})`;
+    document.querySelector('label[for="businessId"]').textContent = `Business ID (${currentData.businessId})`;
+
+    // Clear any existing input in the form fields
+    document.getElementById('companyName').value = '';
+    document.getElementById('city').value = '';
+    document.getElementById('country').value = '';
+    document.getElementById('zipCode').value = '';
+    document.getElementById('businessId').value = '';
 }
 
 // Generate random data
@@ -791,42 +968,61 @@ function generateRandomData() {
 
 // Data validation function
 function validateEntry(formData) {
-    const currentSample = sampleData[currentSampleIndex];
     const errors = [];
     
-    // Check each field against sample data
-    if (formData.companyName !== currentSample.companyName) {
+    // Extract data inside brackets from labels
+    const companyNameLabel = document.querySelector('label[for="companyName"]').textContent;
+    const cityLabel = document.querySelector('label[for="city"]').textContent;
+    const countryLabel = document.querySelector('label[for="country"]').textContent;
+    const zipCodeLabel = document.querySelector('label[for="zipCode"]').textContent;
+    const businessIdLabel = document.querySelector('label[for="businessId"]').textContent;
+
+    // Function to extract text between brackets
+    function getTextBetweenBrackets(text) {
+        const match = text.match(/\((.*?)\)/);
+        return match ? match[1] : '';
+    }
+
+    // Get the expected values (text between brackets)
+    const expectedCompanyName = getTextBetweenBrackets(companyNameLabel);
+    const expectedCity = getTextBetweenBrackets(cityLabel);
+    const expectedCountry = getTextBetweenBrackets(countryLabel);
+    const expectedZipCode = getTextBetweenBrackets(zipCodeLabel);
+    const expectedBusinessId = getTextBetweenBrackets(businessIdLabel);
+    
+    // Check each field against the expected values
+    if (formData.companyName !== expectedCompanyName) {
         errors.push({
             field: 'companyName',
-            message: 'Company name does not match sample data'
+            message: `Company name should be "${expectedCompanyName}"`
         });
     }
     
-    if (formData.city !== currentSample.city) {
+    if (formData.city !== expectedCity) {
         errors.push({
             field: 'city',
-            message: 'City does not match sample data'
+            message: `City should be "${expectedCity}"`
         });
     }
     
-    if (formData.country !== currentSample.country) {
+    if (formData.country !== expectedCountry) {
         errors.push({
             field: 'country',
-            message: 'Country does not match sample data'
+            message: `Country should be "${expectedCountry}"`
         });
     }
     
-    if (formData.zipCode !== currentSample.zipCode) {
+    if (formData.zipCode !== expectedZipCode) {
         errors.push({
             field: 'zipCode',
-            message: 'Zip code does not match sample data'
+            message: `Zip code should be "${expectedZipCode}"`
         });
     }
     
-    if (formData.businessId !== currentSample.businessId) {
+    if (formData.businessId !== expectedBusinessId) {
         errors.push({
             field: 'businessId',
-            message: 'Business ID does not match sample data'
+            message: `Business ID should be "${expectedBusinessId}"`
         });
     }
     
@@ -904,7 +1100,7 @@ document.getElementById('dataEntryForm').addEventListener('submit', function(e) 
 
 // Process entry function
 function processEntry(formData) {
-    // Calculate earnings
+    // Calculate earnings based on user's plan
     const rate = getRatePerEntry();
     const earnings = rate;
     
@@ -914,22 +1110,64 @@ function processEntry(formData) {
     currentUser.earningWallet = (currentUser.earningWallet || 0) + earnings;
     currentUser.totalEarnings = (currentUser.totalEarnings || 0) + earnings;
     
-    // Add transaction
-    currentUser.transactions.push({
+    // Add transaction record
+    const transaction = {
         date: new Date().toLocaleDateString(),
-        type: 'entry',
+        type: 'Data Entry',
         amount: earnings,
-        status: 'completed'
-    });
+        status: 'Completed',
+        details: `Entry #${currentUser.totalEntries}`
+    };
     
-    // Save user data immediately after updating
+    // Initialize transactions array if it doesn't exist
+    if (!currentUser.transactions) {
+        currentUser.transactions = [];
+    }
+    
+    // Add new transaction to the beginning of the array
+    currentUser.transactions.unshift(transaction);
+    
+    // Save user data immediately
     saveUserData();
     
-    // Update UI
-    updateDashboardData();
-    updateWorkPageData();
+    // Update all UI elements
+    updateAllDisplays(earnings);
     
-    // Reset form and clear all fields
+    // Reset form and show new data
+    resetFormAndShowNewData();
+    
+    // Show success message
+    showAlert(`Entry submitted successfully! Earned ₹${earnings.toFixed(2)}`, 'success');
+}
+
+// Function to update all displays
+function updateAllDisplays(earnings) {
+    // Update dashboard earnings
+    document.getElementById('dashboardTodayEarnings').textContent = (currentUser.entriesToday * getRatePerEntry()).toFixed(2);
+    document.getElementById('totalEarnings').textContent = currentUser.totalEarnings.toFixed(2);
+    document.getElementById('earningWallet').textContent = currentUser.earningWallet.toFixed(2);
+    document.getElementById('totalEntries').textContent = currentUser.totalEntries;
+    
+    // Update work page earnings
+    document.getElementById('workPageTodayEarnings').textContent = (currentUser.entriesToday * getRatePerEntry()).toFixed(2);
+    
+    // Update entries counter and progress bar
+    const maxEntries = currentUser.plan === 'free' ? 10 : 50;
+    document.getElementById('entriesCounter').textContent = `${currentUser.entriesToday}/${maxEntries}`;
+    const progressPercent = (currentUser.entriesToday / maxEntries) * 100;
+    document.getElementById('workProgressBar').style.width = `${progressPercent}%`;
+    
+    // Update wallet modal displays
+    document.getElementById('modalEarningWallet').textContent = currentUser.earningWallet.toFixed(2);
+    document.getElementById('modalBonusWallet').textContent = (currentUser.referralBonus || 0).toFixed(2);
+    
+    // Update transaction history
+    updateTransactionHistory();
+}
+
+// Function to reset form and show new data
+function resetFormAndShowNewData() {
+    // Reset form
     const form = document.getElementById('dataEntryForm');
     form.reset();
     
@@ -940,37 +1178,39 @@ function processEntry(formData) {
     document.getElementById('zipCode').value = '';
     document.getElementById('businessId').value = '';
     
-    // Show success message
-    showAlert(`Entry submitted successfully! Earned ₹${earnings.toFixed(2)}`, 'success');
-    
     // Show new data for next entry
-    showNewData();
+    refreshSampleData();
 }
 
-// Show new data for next entry
-function showNewData() {
-    // Get new random data
-    const newData = generateRandomData();
-    
-    // Update sample data display
-    const sampleDataBody = document.getElementById('sampleDataBody');
-    if (sampleDataBody) {
-        sampleDataBody.innerHTML = `
-            <tr>
-                <td>${newData.companyName}</td>
-                <td>${newData.city}</td>
-                <td>${newData.country}</td>
-                <td>${newData.zipCode}</td>
-                <td>${newData.businessId}</td>
-            </tr>
-        `;
+// Update transaction history
+function updateTransactionHistory() {
+    const tbody = document.getElementById('transactionHistory');
+    if (!currentUser.transactions || currentUser.transactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No transactions yet</td></tr>';
+        return;
     }
-    
-    // Clear form
-    const form = document.getElementById('dataEntryForm');
-    if (form) {
-        form.reset();
-    }
+
+    tbody.innerHTML = currentUser.transactions.map(transaction => `
+        <tr>
+            <td>${transaction.date}</td>
+            <td>${transaction.type}</td>
+            <td>₹${transaction.amount.toFixed(2)}</td>
+            <td><span class="badge bg-success">${transaction.status}</span></td>
+            <td>${transaction.details}</td>
+        </tr>
+    `).join('');
+}
+
+// Load YouTube IFrame API
+let tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+let firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+let player;
+function onYouTubeIframeAPIReady() {
+    // Player will be initialized when needed
+    console.log('YouTube API Ready');
 }
 
 // Update showAdModal function
@@ -981,7 +1221,73 @@ function showAdModal(formData) {
     const adStatus = document.getElementById('adStatus');
     let timeLeft = 30;
     let timerInterval;
+    let videoStarted = false;
     let isPaused = false;
+
+    // Initialize YouTube player
+    player = new YT.Player('youtubePlayer', {
+        height: '360',
+        width: '640',
+        videoId: 'IVY8V2vRCMA',
+        playerVars: {
+            'autoplay': 1,
+            'controls': 0,
+            'disablekb': 1,
+            'modestbranding': 1,
+            'rel': 0,
+            'showinfo': 0
+        },
+        events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+        }
+    });
+
+    function onPlayerReady(event) {
+        event.target.playVideo();
+        videoStarted = true;
+        startTimer();
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data !== YT.PlayerState.PLAYING) {
+            clearInterval(timerInterval);
+            isPaused = true;
+        } else if (videoStarted) {
+            isPaused = false;
+            startTimer();
+        }
+    }
+
+    // Handle visibility changes
+    function handleVisibilityChange() {
+        if (document.hidden || !document.hasFocus()) {
+            clearInterval(timerInterval);
+            isPaused = true;
+            if (player) {
+                player.pauseVideo();
+            }
+            adStatus.textContent = 'Ad paused - Please return to this window';
+        } else {
+            if (player) {
+                player.playVideo();
+                isPaused = false;
+                startTimer();
+                adStatus.textContent = 'Please watch the ad to continue...';
+            }
+        }
+    }
+
+    // Add visibility change listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleVisibilityChange);
+    window.addEventListener('focus', () => {
+        if (player) {
+            player.playVideo();
+            isPaused = false;
+            startTimer();
+        }
+    });
 
     // Disable continue button initially
     continueButton.disabled = true;
@@ -989,25 +1295,12 @@ function showAdModal(formData) {
 
     // Update timer display
     timerElement.textContent = `${timeLeft} seconds remaining`;
-    adStatus.textContent = 'Please watch the ad to continue...';
-
-    // Handle visibility changes
-    function handleVisibilityChange() {
-        if (document.hidden || !document.hasFocus()) {
-            isPaused = true;
-            clearInterval(timerInterval);
-            adStatus.textContent = 'Ad paused - Please return to this window';
-        } else if (isPaused) {
-            isPaused = false;
-            adStatus.textContent = 'Please watch the ad to continue...';
-            startTimer();
-        }
-    }
 
     // Start timer function
     function startTimer() {
+        clearInterval(timerInterval);
         timerInterval = setInterval(() => {
-            if (!isPaused) {
+            if (player && player.getPlayerState() === YT.PlayerState.PLAYING && !isPaused) {
                 timeLeft--;
                 timerElement.textContent = `${timeLeft} seconds remaining`;
                 
@@ -1016,18 +1309,13 @@ function showAdModal(formData) {
                     continueButton.disabled = false;
                     continueButton.innerHTML = '<i class="fas fa-check me-2"></i>Continue';
                     adStatus.textContent = 'Ad completed! Click Continue to proceed';
+                    
+                    // Process the entry and update earnings
+                    processEntry(window.pendingFormData);
                 }
             }
         }, 1000);
     }
-
-    // Start initial timer
-    startTimer();
-
-    // Add event listeners for visibility changes
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', () => handleVisibilityChange());
-    window.addEventListener('focus', () => handleVisibilityChange());
 
     // Show the modal
     adModal.show();
@@ -1035,26 +1323,37 @@ function showAdModal(formData) {
     // Handle continue button click
     continueButton.onclick = function() {
         if (!continueButton.disabled) {
-            // Clear event listeners
+            // Remove event listeners
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('blur', handleVisibilityChange);
             window.removeEventListener('focus', handleVisibilityChange);
-            clearInterval(timerInterval);
+            
+            // Stop and destroy the player
+            if (player) {
+                player.stopVideo();
+                player.destroy();
+            }
 
             // Hide modal
             adModal.hide();
 
-            // Process the entry
-            processEntry(window.pendingFormData);
+            // Update all displays
+            updateAllDisplays(getRatePerEntry());
         }
     };
 
     // Clean up when modal is closed
     document.getElementById('adModal').addEventListener('hidden.bs.modal', function() {
+        // Remove event listeners
         document.removeEventListener('visibilitychange', handleVisibilityChange);
         window.removeEventListener('blur', handleVisibilityChange);
         window.removeEventListener('focus', handleVisibilityChange);
+        
         clearInterval(timerInterval);
+        if (player) {
+            player.stopVideo();
+            player.destroy();
+        }
     });
 }
 
@@ -1084,368 +1383,126 @@ function updateWithdrawalHistory() {
 }
 
 // Plan upgrade functionality
+function checkReferralEligibility() {
+    if (!currentUser.referrals) return 0;
+    // Count premium referrals
+    return currentUser.referrals.filter(ref => ref.plan === 'premium' && ref.status === 'active').length;
+}
+
+// Update referral progress in upgrade modal
+function updateReferralProgress() {
+    const premiumReferrals = (currentUser.referrals || []).filter(ref => ref.plan === 'premium').length;
+    const progressPercentage = (premiumReferrals / 5) * 100;
+    
+    document.getElementById('premiumReferralCount').textContent = premiumReferrals;
+    const progressBar = document.getElementById('referralProgressBar');
+    progressBar.style.width = `${Math.min(progressPercentage, 100)}%`;
+    progressBar.setAttribute('aria-valuenow', progressPercentage);
+    
+    // Enable/disable Professional upgrade button based on referral count
+    const upgradeToProfessionalBtn = document.getElementById('upgradeToProfessionalBtn');
+    if (premiumReferrals >= 5) {
+        upgradeToProfessionalBtn.disabled = false;
+        upgradeToProfessionalBtn.innerHTML = '<i class="fas fa-arrow-up me-2"></i>Claim Free Upgrade';
+    } else {
+        upgradeToProfessionalBtn.disabled = true;
+        upgradeToProfessionalBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Get 5 Premium Referrals';
+    }
+}
+
+// Event listener for upgrade buttons
 document.getElementById('upgradeToPremiumBtn').addEventListener('click', function() {
-    if (confirm('Are you sure you want to upgrade to the Premium Plan for ₹2999?')) {
-        // Simulate payment processing
-        showLoading('Processing payment...');
-        setTimeout(() => {
-            // Update user's plan
-            currentUser.plan = 'premium';
-            currentUser.planExpiry = new Date();
-            currentUser.planExpiry.setMonth(currentUser.planExpiry.getMonth() + 3);
-            
-            // Update UI
-            updateDashboardData();
-            hideLoading();
-            
-            // Show success message
-            showAlert('Plan upgraded successfully!', 'success');
-            
-            // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
-        }, 2000);
+    if (currentUser.plan === 'professional') {
+        alert('You are already on a higher plan!');
+        return;
+    }
+    
+    if (confirm('Upgrade to Premium Plan for ₹2999 for 3 months?')) {
+        // Process premium upgrade
+        currentUser.plan = 'premium';
+        currentUser.planExpiry = new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)); // 90 days
+        saveUserData();
+        updateDashboardData();
+        alert('Successfully upgraded to Premium Plan!');
+        
+        // Add transaction record
+        addTransaction({
+            date: new Date(),
+            type: 'Plan Upgrade',
+            amount: 2999,
+            status: 'Completed',
+            details: 'Upgraded to Premium Plan'
+        });
+        
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
     }
 });
 
 document.getElementById('upgradeToProfessionalBtn').addEventListener('click', function() {
-    if (confirm('Are you sure you want to upgrade to the Professional Plan for ₹9999?')) {
-        // Simulate payment processing
-        showLoading('Processing payment...');
-        setTimeout(() => {
-            // Update user's plan
-            currentUser.plan = 'professional';
-            currentUser.planExpiry = new Date();
-            currentUser.planExpiry.setFullYear(currentUser.planExpiry.getFullYear() + 1);
-            
-            // Update UI
-            updateDashboardData();
-            hideLoading();
-            
-            // Show success message
-            showAlert('Plan upgraded successfully!', 'success');
-            
-            // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
-        }, 2000);
+    if (currentUser.plan === 'professional') {
+        alert('You are already on the Professional Plan!');
+        return;
+    }
+    
+    const premiumReferrals = (currentUser.referrals || []).filter(ref => ref.plan === 'premium').length;
+    if (premiumReferrals >= 5) {
+        // Process free professional upgrade
+        currentUser.plan = 'professional';
+        currentUser.planExpiry = new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)); // 365 days
+        saveUserData();
+        updateDashboardData();
+        alert('Congratulations! You have been upgraded to the Professional Plan for free!');
+        
+        // Add transaction record
+        addTransaction({
+            date: new Date(),
+            type: 'Plan Upgrade',
+            amount: 0,
+            status: 'Completed',
+            details: 'Free upgrade to Professional Plan (Referral Reward)'
+        });
+        
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('upgradeModal')).hide();
+    } else {
+        alert(`You need ${5 - premiumReferrals} more Premium referrals to get a free Professional upgrade!`);
     }
 });
 
-// Helper function to show loading state
-function showLoading(message) {
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'loading-overlay';
-    loadingDiv.innerHTML = `
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-2">${message}</p>
-    `;
-    document.body.appendChild(loadingDiv);
-}
+// Update the modal when it's opened
+document.getElementById('upgradeModal').addEventListener('show.bs.modal', function() {
+    updateReferralProgress();
+});
 
-// Helper function to hide loading state
-function hideLoading() {
-    const loadingDiv = document.querySelector('.loading-overlay');
-    if (loadingDiv) {
-        loadingDiv.remove();
-    }
-}
-
-// Save current page state
-function savePageState(page) {
-    localStorage.setItem('currentPage', page);
-}
-
-// Load current page state
-function loadPageState() {
-    return localStorage.getItem('currentPage') || 'dashboard';
-}
-
-// Update UI based on login state
-function updateUI() {
-    if (isLoggedIn) {
-        // Hide landing page and main navigation
-        landingPage.style.display = 'none';
-        mainNav.style.display = 'none';
-        
-        // Show dashboard navigation
-        dashboardNav.style.display = 'block';
-        
-        // Close any open modals
-        loginModal.hide();
-        registerModal.hide();
-        
-        // Update user display
-        document.getElementById('usernameDisplay').textContent = currentUser.name;
-        
-        // Show appropriate page based on saved state
-        const currentPage = loadPageState();
-        if (currentPage === 'startWork') {
-            showStartWorkPage();
-        } else {
-            showDashboardPage();
-        }
-    } else {
-        // Show landing page and main navigation
-        landingPage.style.display = 'block';
-        mainNav.style.display = 'block';
-        
-        // Hide dashboard navigation
-        dashboardNav.style.display = 'none';
-        
-        // Show landing page
-        showLandingPage();
-    }
-}
-
-function showLandingPage() {
-    landingPage.style.display = 'block';
-    dashboardPage.style.display = 'none';
-    startWorkPage.style.display = 'none';
-}
-
-function showDashboardPage() {
-    console.log("showDashboardPage function called");
-    document.getElementById('startWorkPage').style.display = 'none';
-    document.getElementById('dashboardPage').style.display = 'block';
-}
-    
-    // Save current page state
-    savePageState('dashboard');
-    
-    // Get page elements
-    const landingPage = document.getElementById('landingPage');
-    const dashboardPage = document.getElementById('dashboardPage');
-    const startWorkPage = document.getElementById('startWorkPage');
-    
-    // Hide other pages
-    if (landingPage) {
-        landingPage.style.display = 'none';
-        console.log('Landing page hidden'); // Debug log
-    }
-    
-    // Show dashboard page
-    if (dashboardPage) {
-        dashboardPage.style.display = 'block';
-        dashboardPage.style.position = 'relative';
-        dashboardPage.style.zIndex = '1';
-        console.log('Dashboard page displayed'); // Debug log
-        
-        // Update dashboard data
-        updateDashboardData();
-    } else {
-        console.error('Dashboard page element not found'); // Debug log
-    }
-    
-    // Hide start work page
-    if (startWorkPage) {
-        startWorkPage.style.display = 'none';
-        startWorkPage.style.position = 'relative';
-        startWorkPage.style.zIndex = '0';
-        console.log('Start work page hidden'); // Debug log
-    }
-}
-
-function showStartWorkPage() {
-    console.log('showStartWorkPage called'); // Debug log
-    
-    // Save current page state
-    savePageState('startWork');
-    
-    // Get page elements
-    const landingPage = document.getElementById('landingPage');
-    const dashboardPage = document.getElementById('dashboardPage');
-    const startWorkPage = document.getElementById('startWorkPage');
-    
-    // Hide other pages
-    if (landingPage) {
-        landingPage.style.display = 'none';
-        console.log('Landing page hidden'); // Debug log
-    }
-    
-    if (dashboardPage) {
-        dashboardPage.style.display = 'none';
-        dashboardPage.style.position = 'relative';
-        dashboardPage.style.zIndex = '0';
-        console.log('Dashboard page hidden'); // Debug log
-    }
-    
-    // Show start work page
-    if (startWorkPage) {
-        startWorkPage.style.display = 'block';
-        startWorkPage.style.position = 'fixed';
-        startWorkPage.style.top = '0';
-        startWorkPage.style.left = '0';
-        startWorkPage.style.width = '100%';
-        startWorkPage.style.height = '100%';
-        startWorkPage.style.zIndex = '1000';
-        startWorkPage.style.overflow = 'auto';
-        console.log('Start work page displayed'); // Debug log
-        
-        // Update work page data
-        updateWorkPageData();
-        displaySampleData();
-    } else {
-        console.error('Start work page element not found'); // Debug log
-    }
-}
-
-// Profile management
-function initializeProfile() {
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            saveProfile();
-        });
-    }
-
-    // Profile picture upload
-    const profilePicInput = document.getElementById('profilePicInput');
-    if (profilePicInput) {
-        profilePicInput.addEventListener('change', function(e) {
-            handleProfilePicUpload(e);
-        });
-    }
-
-    // Load existing profile data
-    loadProfile();
-}
-
-function loadProfile() {
-    if (!currentUser) return;
-
-    // Set profile fields
-    document.getElementById('profileName').value = currentUser.name || '';
-    document.getElementById('profileEmail').value = currentUser.email || '';
-    document.getElementById('profileMobile').value = currentUser.mobile || '';
-    document.getElementById('profileAddress').value = currentUser.address || '';
-    document.getElementById('profileCity').value = currentUser.city || '';
-    document.getElementById('profileState').value = currentUser.state || '';
-    document.getElementById('profileCountry').value = currentUser.country || '';
-    document.getElementById('profilePincode').value = currentUser.pincode || '';
-
-    // Set profile picture if exists
-    if (currentUser.profilePic) {
-        document.getElementById('profilePicPreview').src = currentUser.profilePic;
-    }
-}
-
-function saveProfile() {
-    if (!currentUser) return;
-
-    // Update user data
-    currentUser.name = document.getElementById('profileName').value;
-    currentUser.address = document.getElementById('profileAddress').value;
-    currentUser.city = document.getElementById('profileCity').value;
-    currentUser.state = document.getElementById('profileState').value;
-    currentUser.country = document.getElementById('profileCountry').value;
-    currentUser.pincode = document.getElementById('profilePincode').value;
-
-    // Save to localStorage
-    saveUserData();
-
-    // Show success message
-    showAlert('Profile updated successfully!', 'success');
-
-    // Update UI
-    updateUI();
-}
-
-function handleProfilePicUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.match('image.*')) {
-        showAlert('Please select an image file', 'error');
-        return;
-    }
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-        showAlert('Image size should be less than 2MB', 'error');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        // Update preview
-        document.getElementById('profilePicPreview').src = e.target.result;
-        
-        // Save to user data
-        currentUser.profilePic = e.target.result;
-        saveUserData();
-        
-        // Show success message
-        showAlert('Profile picture updated successfully!', 'success');
+// Function to load sample data into the form labels
+function loadSampleData() {
+    const sampleData = {
+        companyName: "Future Enterprises",
+        city: "Kolkata",
+        country: "India",
+        zipCode: "700001",
+        businessId: "FUT175533"
     };
-    reader.readAsDataURL(file);
+
+    // Update the form labels with sample data
+    document.querySelector('label[for="companyName"]').textContent = `Company Name (${sampleData.companyName})`;
+    document.querySelector('label[for="city"]').textContent = `City (${sampleData.city})`;
+    document.querySelector('label[for="country"]').textContent = `Country (${sampleData.country})`;
+    document.querySelector('label[for="zipCode"]').textContent = `Zip Code (${sampleData.zipCode})`;
+    document.querySelector('label[for="businessId"]').textContent = `Business ID (${sampleData.businessId})`;
+
+    // Clear any existing input in the form fields
+    document.getElementById('companyName').value = '';
+    document.getElementById('city').value = '';
+    document.getElementById('country').value = '';
+    document.getElementById('zipCode').value = '';
+    document.getElementById('businessId').value = '';
 }
 
-// Initialize UI and event listeners
+// Call loadSampleData when the page loads
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded event fired'); // Debug log
-    
-    // Initialize UI
-    updateUI();
-    
-    // Add event listener for back to dashboard button
-    const backToDashboard = document.getElementById('backToDashboard');
-    if (backToDashboard) {
-        console.log('Back to dashboard button found'); // Debug log
-        backToDashboard.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Back to dashboard button clicked'); // Debug log
-            showDashboardPage();
-            // Force update the UI to ensure proper navigation
-            updateUI();
-        });
-    } else {
-        console.error('Back to dashboard button not found'); // Debug log
-    }
-    
-    // Add event listener for dashboard navigation
-    const dashboardNavLink = document.getElementById('dashboardNavLink');
-    if (dashboardNavLink) {
-        console.log('Dashboard nav link found'); // Debug log
-        dashboardNavLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Dashboard nav link clicked'); // Debug log
-            showDashboardPage();
-        });
-    } else {
-        console.error('Dashboard nav link not found'); // Debug log
-    }
-    
-    // Add event listener for start work button
-    const startWorkBtn = document.getElementById('startWorkBtn');
-    if (startWorkBtn) {
-        console.log('Start work button found'); // Debug log
-        startWorkBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Start work button clicked'); // Debug log
-            showStartWorkPage();
-        });
-    } else {
-        console.error('Start work button not found'); // Debug log
-    }
-    
-    // Add event listener for start work navigation link
-    const startWorkNavLink = document.getElementById('startWorkNavLink');
-    if (startWorkNavLink) {
-        console.log('Start work nav link found'); // Debug log
-        startWorkNavLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Start work nav link clicked'); // Debug log
-            showStartWorkPage();
-        });
-    } else {
-        console.error('Start work nav link not found'); // Debug log
-    }
-
-    // Initialize profile
-    initializeProfile();
+    loadSampleData();
 });
 
 // Initialize UI
