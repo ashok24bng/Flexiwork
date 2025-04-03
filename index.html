@@ -317,7 +317,7 @@
                             <input type="checkbox" class="form-check-input" id="rememberMe">
                             <label class="form-check-label" for="rememberMe">Remember me</label>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn btn-primary w-100" id="loginButton">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </button>
                     </form>
