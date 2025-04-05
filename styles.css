@@ -939,3 +939,11 @@ footer a:hover {
         font-size: 1.5rem;
     }
 } 
+/* Remove the old -ms-high-contrast styles */
+
+/* Add the new Forced Colors Mode styles */
+@media (forced-colors: active) {
+    .your-element {
+        forced-color-adjust: none;
+    }
+}
