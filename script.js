@@ -462,75 +462,88 @@ function showLandingPage() {
 // Show dashboard page
 function showDashboardPage() {
     console.log('Showing dashboard page');
-    
+
     // Check if user is logged in
     if (!isLoggedIn || !currentUser) {
         console.error('Attempted to show dashboard while not logged in');
         showLandingPage();
         return;
     }
-    
+
     // Hide landing page and show dashboard
     const landingPage = document.getElementById('landingPage');
     const dashboardPage = document.getElementById('dashboardPage');
     const startWorkPage = document.getElementById('startWorkPage');
     const mainNav = document.querySelector('.navbar:not(#dashboardNav)');
     const dashboardNav = document.getElementById('dashboardNav');
-    
+
+    if (!landingPage || !dashboardPage || !startWorkPage || !mainNav || !dashboardNav) {
+        console.error('One or more required elements are missing from the DOM');
+        return;
+    }
+
     if (landingPage) {
         landingPage.style.display = 'none';
         landingPage.classList.add('d-none');
+        console.log('Landing page hidden');
     }
-    
+
     if (dashboardPage) {
         dashboardPage.style.display = 'block';
         dashboardPage.classList.remove('d-none');
+        console.log('Dashboard page shown');
     }
-    
+
     if (startWorkPage) {
         startWorkPage.style.display = 'none';
         startWorkPage.classList.add('d-none');
+        console.log('Start Work page hidden');
     }
-    
+
     // Update navigation visibility
     if (mainNav) {
         mainNav.style.display = 'none';
         mainNav.classList.add('d-none');
+        console.log('Main navigation hidden');
     }
-    
+
     if (dashboardNav) {
         dashboardNav.style.display = 'block';
         dashboardNav.classList.remove('d-none');
-        
+        console.log('Dashboard navigation shown');
+
         // Update user section in dashboard nav
         const userSection = dashboardNav.querySelector('#userSection');
         const authButtons = dashboardNav.querySelector('.auth-buttons');
-        
+
         if (userSection) {
             userSection.style.display = 'flex';
             userSection.classList.remove('d-none');
+            console.log('User section shown');
         }
         if (authButtons) {
             authButtons.style.display = 'none';
             authButtons.classList.add('d-none');
+            console.log('Auth buttons hidden');
         }
     }
-    
+
     // Update user display
     const usernameDisplay = document.getElementById('usernameDisplay');
     if (usernameDisplay && currentUser) {
         usernameDisplay.textContent = currentUser.name;
+        console.log('Username display updated');
     }
-    
+
     // Update dashboard data
     updateDashboardData();
-    
+
     // Force a reflow to ensure display changes take effect
     document.body.offsetHeight;
-    
+
     // Scroll to top of dashboard
     window.scrollTo(0, 0);
-    
+
     // Log success
     console.log('Dashboard page displayed successfully');
 }
@@ -581,20 +594,4 @@ function showStartWorkPage() {
     }
     
     if (dashboardNav) {
-        dashboardNav.style.display = 'block';
-        dashboardNav.classList.remove('d-none');
-        
-        // Ensure user section is visible
-        const userSection = dashboardNav.querySelector('.user-section');
-        if (userSection) {
-            userSection.style.display = 'flex';
-            userSection.classList.remove('d-none');
-        }
-    }
-}
-
-// Generate a random referral code
-function generateReferralCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let
+        dashboardNav.style.display
