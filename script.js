@@ -590,8 +590,4 @@ function showStartWorkPage() {
     // Update navigation visibility
     if (mainNav) {
         mainNav.style.display = 'none';
-        mainNav.classList.add('d-none');
-    }
-    
-    if (dashboardNav) {
-        dashboardNav.style.display
+        mainNav
