@@ -429,6 +429,8 @@ function showDashboardPage() {
     dashboardPage.style.display = 'block';
     userSection.style.display = 'block';
     usernameDisplay.textContent = currentUser.name;
+    // Hide the header
+    mainNav.style.display = 'none';
 }
 
 // Function to show the landing page
@@ -436,6 +438,8 @@ function showLandingPage() {
     landingPage.style.display = 'block';
     dashboardPage.style.display = 'none';
     userSection.style.display = 'none';
+    // Show the header
+    mainNav.style.display = 'block';
 }
 
 // Function to show the start work page
