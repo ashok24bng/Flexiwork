@@ -16,7 +16,7 @@ let currentUser = {
 };
 
 // Session management
-const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+const SESSION_TIMEOUT = 5 * 60 * 0; // 5 minutes in milliseconds
 let sessionTimeout;
 
 // DOM Elements
@@ -590,4 +590,8 @@ function showStartWorkPage() {
     // Update navigation visibility
     if (mainNav) {
         mainNav.style.display = 'none';
-        mainNav
+        mainNav.classList.add('d-none');
+    }
+    
+    if (dashboardNav) {
+        dashboardNav.style.display = '
