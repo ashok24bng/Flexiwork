@@ -417,4 +417,43 @@ function initializeUIElements() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function(e) {
-            e.prevent
+            e.preventDefault();
+            logout();
+        });
+    }
+}
+
+// Function to show the dashboard page
+function showDashboardPage() {
+    landingPage.style.display = 'none';
+    dashboardPage.style.display = 'block';
+    userSection.style.display = 'block';
+    usernameDisplay.textContent = currentUser.name;
+}
+
+// Function to show the landing page
+function showLandingPage() {
+    landingPage.style.display = 'block';
+    dashboardPage.style.display = 'none';
+    userSection.style.display = 'none';
+}
+
+// Function to show the start work page
+function showStartWorkPage() {
+    startWorkPage.style.display = 'block';
+    dashboardPage.style.display = 'none';
+}
+
+// Function to show alerts
+function showAlert(message, type) {
+    const alertBox = document.createElement('div');
+    alertBox.textContent = message;
+    alertBox.className = `alert alert-${type}`;
+    document.body.appendChild(alertBox);
+    setTimeout(() => alertBox.remove(), 3000);
+}
+
+// Function to generate referral code
+function generateReferralCode() {
+    return Math.random().toString(36).substring(2, 12).toUpperCase();
+}
