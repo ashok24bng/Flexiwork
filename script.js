@@ -1,3 +1,23 @@
+// firebase.js
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAPK9Q5l6Tq6tTvKLzaswpND9kL1D5-c8Q",
+  authDomain: "flexiwork-c314e.firebaseapp.com",
+  projectId: "flexiwork-c314e",
+  storageBucket: "flexiwork-c314e.firebasestorage.app",
+  messagingSenderId: "458889603045",
+  appId: "1:458889603045:web:c559fec1639d6d31a8710c",
+  measurementId: "G-MJMDCRJ5Y9"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { auth, db };
 <!DOCTYPE html>
 <html lang="en">
 <head>
