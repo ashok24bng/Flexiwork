@@ -18,6 +18,109 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 export { auth, db };
+
+import { auth, db } from './firebase.js';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from 'firebase/auth';
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  arrayUnion,
+  getDocs,
+  collection
+} from 'firebase/firestore';
+
+// REGISTER
+async function register(email, password) {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    await setDoc(doc(db, "users", user.uid), {
+      email,
+      wallet: 0,
+      earnings: 0,
+      work: [],
+      withdrawals: []
+    });
+
+    alert("Registered successfully!");
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// LOGIN
+async function login(email, password) {
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// DASHBOARD
+function loadDashboard() {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        document.getElementById("user-data").innerHTML = `
+          <p>Email: ${data.email}</p>
+          <p>Wallet Balance: ₹${data.wallet}</p>
+          <p>Total Earnings: ₹${data.earnings}</p>
+          <button onclick="requestWithdrawal()">Request Withdrawal</button>
+          <button onclick="logout()">Logout</button>
+        `;
+      }
+    } else {
+      window.location.href = "index.html";
+    }
+  });
+}
+
+// LOGOUT
+function logout() {
+  signOut(auth).then(() => window.location.href = "index.html");
+}
+
+// WITHDRAWAL
+async function requestWithdrawal() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  const data = userSnap.data();
+
+  if (data.wallet >= 300) {
+    const newRequest = {
+      amount: data.wallet,
+      status: "Pending",
+      date: new Date().toLocaleString()
+    };
+
+    await updateDoc(userRef, {
+      withdrawals: arrayUnion(newRequest),
+      wallet: 0
+    });
+
+    alert("Withdrawal request submitted.");
+  } else {
+    alert("Minimum ₹300 required to withdraw.");
+  }
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
